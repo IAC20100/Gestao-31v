@@ -11,7 +11,7 @@ import {
   BarChart3, Droplets, Zap, ShieldCheck, Megaphone,
   Box, UserCheck, Activity, Maximize2, CheckCircle2, Presentation, LogOut,
   X, Download, FileUp, Database as DatabaseIcon, MessageSquare, Target,
-  Wifi, WifiOff
+  Wifi, WifiOff, GripVertical
 } from 'lucide-react';
 import { KanbanMirror } from '../components/KanbanMirror';
 import { TicketsMirror } from '../components/TicketsMirror';
@@ -26,6 +26,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -55,7 +56,7 @@ function SortableTile({ id, children, className, onResize, onClose }: { id: stri
     isDragging
   } = useSortable({ id });
 
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     zIndex: isDragging ? 50 : 1,
@@ -67,12 +68,20 @@ function SortableTile({ id, children, className, onResize, onClose }: { id: stri
     <div
       ref={setNodeRef}
       style={style}
-      className={`${className} cursor-grab active:cursor-grabbing relative group`}
-      {...attributes}
-      {...listeners}
+      className={`${className} relative group`}
     >
+      {/* Drag Handle - Visible on mobile, hover on desktop */}
+      <div 
+        {...attributes} 
+        {...listeners}
+        className="absolute top-2 left-2 p-1.5 bg-black/40 hover:bg-black/60 text-white rounded-lg transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 z-50 cursor-grab active:cursor-grabbing"
+        style={{ touchAction: 'none' }}
+      >
+        <GripVertical className="w-4 h-4" />
+      </div>
+
       {children}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-50">
+      <div className="absolute top-2 right-2 flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-50">
         <button
           onClick={onResize}
           onPointerDown={(e) => e.stopPropagation()}
@@ -238,7 +247,13 @@ export default function Dashboard() {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Permite clicar sem arrastar se o movimento for pequeno
+        distance: 8,
+      },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 250,
+        tolerance: 5,
       },
     }),
     useSensor(KeyboardSensor, {
