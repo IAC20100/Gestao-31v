@@ -83,13 +83,19 @@ function SupabaseStatus() {
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
-  const { theme, toggleTheme, isAuthenticated, logout, notifications, markNotificationAsRead, clearNotifications, companyLogo } = useStore();
+  const { theme, toggleTheme, isAuthenticated, logout, notifications, markNotificationAsRead, clearNotifications, companyLogo, fetchInitialData } = useStore();
   const location = useLocation();
   const navigate = useNavigate();
   const [time, setTime] = useState(new Date());
   const [showNotifications, setShowNotifications] = useState(false);
   
   const unreadCount = notifications.filter(n => !n.read).length;
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchInitialData();
+    }
+  }, [isAuthenticated, fetchInitialData]);
   
   useEffect(() => {
     if (theme === 'dark') {

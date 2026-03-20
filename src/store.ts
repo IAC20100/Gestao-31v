@@ -49,7 +49,7 @@ export const useStore = create<AppState>()(
         website: ''
       },
       theme: 'light',
-      isAuthenticated: false,
+      isAuthenticated: localStorage.getItem('isAuthenticated') === 'true',
       menuOrder: ['dashboard', 'accountability', 'consumption', 'clients', 'products', 'supplies', 'tickets', 'kanban', 'quotes', 'receipts', 'financial', 'calendar', 'settings'],
       hiddenTiles: [],
       tileSizes: {},
@@ -557,6 +557,7 @@ export const useStore = create<AppState>()(
       
       login: (user, pass) => {
         if (user === 'iac' && pass === 'iac2010') {
+          localStorage.setItem('isAuthenticated', 'true');
           set({ isAuthenticated: true });
           // Ao fazer login, busca os dados do Supabase
           get().fetchInitialData();
@@ -564,7 +565,10 @@ export const useStore = create<AppState>()(
         }
         return false;
       },
-      logout: () => set({ isAuthenticated: false }),
+      logout: () => {
+        localStorage.removeItem('isAuthenticated');
+        set({ isAuthenticated: false });
+      },
       
       addClient: async (client) => {
         const id = uuidv4();
