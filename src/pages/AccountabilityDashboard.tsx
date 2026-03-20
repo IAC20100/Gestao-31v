@@ -82,6 +82,7 @@ export default function AccountabilityDashboard() {
   const [isAddGoalModalOpen, setIsAddGoalModalOpen] = useState(false);
   const [isEditGoalModalOpen, setIsEditGoalModalOpen] = useState(false);
   const [editingGoal, setEditingGoal] = useState<SavingsGoal | null>(null);
+  const [customAmounts, setCustomAmounts] = useState<Record<string, string>>({});
   const [newCost, setNewCost] = useState({
     description: '',
     value: '',
@@ -918,33 +919,57 @@ export default function AccountabilityDashboard() {
                     </div>
                   </div>
 
-                  <div className="mt-8 flex gap-3">
-                    <button 
-                      onClick={() => handleUpdateGoalAmount(goal.id, goal.currentAmount, 100)}
-                      className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" /> 100
-                    </button>
-                    <button 
-                      onClick={() => handleUpdateGoalAmount(goal.id, goal.currentAmount, 500)}
-                      className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-xl text-xs font-black transition-all flex items-center justify-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" /> 500
-                    </button>
-                    <button 
-                      onClick={() => handleEditGoal(goal)}
-                      className="p-3 bg-white/5 hover:bg-white/10 text-white/60 rounded-xl transition-all"
-                      title="Editar Meta"
-                    >
-                      <FileText className="w-5 h-5" />
-                    </button>
-                    <button 
-                      onClick={() => deleteSavingsGoal(goal.id)}
-                      className="p-3 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all"
-                      title="Excluir Meta"
-                    >
-                      <XCircle className="w-5 h-5" />
-                    </button>
+                  <div className="mt-8 space-y-4">
+                    <div className="flex gap-2">
+                      <input 
+                        type="number"
+                        placeholder="Valor para juntar..."
+                        value={customAmounts[goal.id] || ''}
+                        onChange={(e) => setCustomAmounts(prev => ({ ...prev, [goal.id]: e.target.value }))}
+                        className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-white/30 transition-all text-white"
+                      />
+                      <button 
+                        onClick={() => {
+                          const val = parseFloat(customAmounts[goal.id] || '0');
+                          if (!isNaN(val) && val > 0) {
+                            handleUpdateGoalAmount(goal.id, goal.currentAmount, val);
+                            setCustomAmounts(prev => ({ ...prev, [goal.id]: '' }));
+                          }
+                        }}
+                        className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2"
+                      >
+                        <Plus className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <button 
+                        onClick={() => handleUpdateGoalAmount(goal.id, goal.currentAmount, 100)}
+                        className="flex-1 bg-white/5 hover:bg-white/10 py-2.5 rounded-xl text-[10px] font-black transition-all"
+                      >
+                        +100
+                      </button>
+                      <button 
+                        onClick={() => handleUpdateGoalAmount(goal.id, goal.currentAmount, 500)}
+                        className="flex-1 bg-white/5 hover:bg-white/10 py-2.5 rounded-xl text-[10px] font-black transition-all"
+                      >
+                        +500
+                      </button>
+                      <button 
+                        onClick={() => handleEditGoal(goal)}
+                        className="p-2.5 bg-white/5 hover:bg-white/10 text-white/60 rounded-xl transition-all"
+                        title="Editar Meta"
+                      >
+                        <FileText className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => deleteSavingsGoal(goal.id)}
+                        className="p-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-all"
+                        title="Excluir Meta"
+                      >
+                        <XCircle className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
 
                   {isCompleted && (
@@ -1131,6 +1156,19 @@ export default function AccountabilityDashboard() {
                   />
                 </div>
                 <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 block">Valor Inicial (R$)</label>
+                  <input 
+                    type="number" 
+                    value={newGoal.currentAmount}
+                    onChange={(e) => setNewGoal({...newGoal, currentAmount: e.target.value})}
+                    placeholder="0,00"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-white/30 transition-all"
+                  />
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 block">Data Alvo</label>
                   <input 
                     type="date" 
@@ -1139,9 +1177,6 @@ export default function AccountabilityDashboard() {
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-white/30 transition-all"
                   />
                 </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 block">Categoria</label>
                   <select 
@@ -1155,20 +1190,21 @@ export default function AccountabilityDashboard() {
                     <option value="Lazer" className="bg-[#004a7c]">Lazer</option>
                   </select>
                 </div>
-                <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 block">Ícone</label>
-                  <select 
-                    value={newGoal.icon}
-                    onChange={(e) => setNewGoal({...newGoal, icon: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-white/30 transition-all appearance-none"
-                  >
-                    <option value="Rocket" className="bg-[#004a7c]">Foguete</option>
-                    <option value="Target" className="bg-[#004a7c]">Alvo</option>
-                    <option value="Trophy" className="bg-[#004a7c]">Troféu</option>
-                    <option value="Coins" className="bg-[#004a7c]">Moedas</option>
-                    <option value="Zap" className="bg-[#004a7c]">Raio</option>
-                  </select>
-                </div>
+              </div>
+              
+              <div>
+                <label className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-2 block">Ícone</label>
+                <select 
+                  value={newGoal.icon}
+                  onChange={(e) => setNewGoal({...newGoal, icon: e.target.value})}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-white outline-none focus:border-white/30 transition-all appearance-none"
+                >
+                  <option value="Rocket" className="bg-[#004a7c]">Foguete</option>
+                  <option value="Target" className="bg-[#004a7c]">Alvo</option>
+                  <option value="Trophy" className="bg-[#004a7c]">Troféu</option>
+                  <option value="Coins" className="bg-[#004a7c]">Moedas</option>
+                  <option value="Zap" className="bg-[#004a7c]">Raio</option>
+                </select>
               </div>
             </div>
             

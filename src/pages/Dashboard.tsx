@@ -1098,7 +1098,7 @@ export default function Dashboard() {
           items={tiles.map(t => t.id)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 relative z-10 max-w-[1400px] perspective-1000 grid-flow-dense">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 relative z-10 max-w-[1400px] perspective-1000">
             {tiles.filter(t => !hiddenTiles.includes(t.id)).map((tile) => {
               const currentSize = tileSizes[tile.id] || (tile.type === 'wide' ? 'medium' : 'small');
               const sizeClasses = currentSize === 'small' ? 'col-span-1 row-span-1 aspect-square' :
