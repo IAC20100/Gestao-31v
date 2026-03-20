@@ -47,7 +47,7 @@ export default function Tickets() {
   };
 
   return (
-    <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-8 md:p-12 overflow-x-hidden relative flex flex-col">
+    <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-4 sm:p-8 md:p-12 overflow-x-hidden relative flex flex-col">
       {/* Background Decorative Elements */}
       <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
         <svg className="w-full h-full" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
@@ -56,21 +56,21 @@ export default function Tickets() {
         </svg>
       </div>
 
-      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 shrink-0">
-        <div className="flex items-center gap-6">
-          <BackButton />
+      <header className="mb-6 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 relative z-10 shrink-0">
+        <div className="flex items-center gap-4 md:gap-6">
+          <BackButton iconSize={6} className="p-3 md:p-4" />
           <div>
-            <h1 className="text-6xl font-light tracking-tight text-white">Ordens de Serviço</h1>
-            <p className="text-xl opacity-60 mt-2 font-light text-white">Gerencie as manutenções e atendimentos</p>
+            <h1 className="text-2xl md:text-6xl font-light tracking-tight text-white">Ordens de Serviço</h1>
+            <p className="text-xs md:text-xl opacity-60 mt-1 md:mt-2 font-light text-white">Gerencie as manutenções</p>
           </div>
         </div>
         
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full md:w-auto">
           <Link 
             to="/tickets/new"
-            className="bg-white/10 hover:bg-white/20 text-white px-10 py-5 flex items-center gap-3 border border-white/20 backdrop-blur-md transition-all rounded-2xl shadow-2xl font-bold tracking-widest uppercase text-sm"
+            className="bg-white/10 hover:bg-white/20 text-white px-6 md:px-10 py-3 md:py-5 flex items-center justify-center gap-3 border border-white/20 backdrop-blur-md transition-all rounded-2xl shadow-2xl font-bold tracking-widest uppercase text-xs md:text-sm w-full md:w-auto"
           >
-            <Plus className="w-6 h-6" />
+            <Plus className="w-5 h-5 md:w-6 md:h-6" />
             Nova Ordem
           </Link>
         </motion.div>
@@ -89,14 +89,14 @@ export default function Tickets() {
 
         {/* Search and List Section */}
         <div className="relative z-10">
-          <div className="mb-8 max-w-xl relative">
-            <Search className="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
+          <div className="mb-6 md:mb-8 max-w-xl relative">
+            <Search className="w-5 h-5 md:w-6 md:h-6 absolute left-4 top-1/2 -translate-y-1/2 text-white/40" />
             <input 
               type="text" 
               placeholder="Buscar ordens..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-14 pr-6 py-4 bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl outline-none transition-all text-xl font-light placeholder:text-white/20 backdrop-blur-sm text-white"
+              className="w-full pl-12 md:pl-14 pr-6 py-3 md:py-4 bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl outline-none transition-all text-lg md:text-xl font-light placeholder:text-white/20 backdrop-blur-sm text-white"
             />
           </div>
 
@@ -125,7 +125,7 @@ export default function Tickets() {
                       <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center mb-4 border border-white/10">
                         <Wrench className="w-5 h-5 text-white" />
                       </div>
-                      <h3 className="text-lg font-black text-white leading-tight mb-1 line-clamp-2 uppercase tracking-tight">
+                      <h3 className="text-base md:text-lg font-black text-white leading-tight mb-1 line-clamp-2 uppercase tracking-tight">
                         {ticket.title || `Manutenção ${ticket.type}`}
                       </h3>
                       <div className="flex items-center gap-2">

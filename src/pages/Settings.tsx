@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useStore } from '../store';
 import { CompanyData } from '../types';
+import { toast } from 'react-hot-toast';
 import { Upload, Trash2, Image as ImageIcon, Save, Download, Database, FileUp, ChevronUp, ChevronDown, Layout as LayoutIcon, Settings as SettingsIcon, Eye, EyeOff } from 'lucide-react';
 import { BackButton } from '../components/BackButton';
 import { motion } from 'framer-motion';
@@ -14,7 +15,11 @@ export default function Settings() {
     companyData, setCompanyData,
     menuOrder, setMenuOrder,
     hiddenTiles, toggleTileVisibility,
+    tileSizes, tileOrder,
     clients, checklistItems, tickets, quotes, receipts, costs, appointments, products,
+    suppliers, supplyItems, supplyQuotations, payments, legalAgreements, scheduledMaintenances,
+    notifications, consumptionReadings, digitalFolder, notices, packages, visitors,
+    criticalEvents, energyData, savingsGoals, assemblies, documentTemplates,
     restoreData, logout
   } = useStore();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -91,10 +96,31 @@ export default function Settings() {
       costs,
       appointments,
       products,
+      suppliers,
+      supplyItems,
+      supplyQuotations,
+      payments,
+      legalAgreements,
+      scheduledMaintenances,
+      notifications,
+      consumptionReadings,
+      digitalFolder,
+      notices,
+      packages,
+      visitors,
+      criticalEvents,
+      energyData,
+      savingsGoals,
+      assemblies,
+      documentTemplates,
       companyLogo,
       companySignature,
       companyData,
-      version: '1.0',
+      menuOrder,
+      hiddenTiles,
+      tileSizes,
+      tileOrder,
+      version: '1.1',
       exportDate: new Date().toISOString()
     };
 
@@ -113,14 +139,15 @@ export default function Settings() {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = (event) => {
+      reader.onload = async (event) => {
         try {
           const json = JSON.parse(event.target?.result as string);
           if (window.confirm('Atenção: Restaurar um backup irá substituir todos os dados atuais. Deseja continuar?')) {
-            restoreData(json);
+            await restoreData(json);
           }
         } catch (error) {
           console.error('Erro ao importar backup:', error);
+          toast.error('Arquivo de backup inválido.');
         }
       };
       reader.readAsText(file);

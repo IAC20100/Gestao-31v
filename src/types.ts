@@ -473,5 +473,5 @@ export interface AppState {
   updateDocumentTemplate: (id: string, template: Partial<DocumentTemplate>) => Promise<void>;
   deleteDocumentTemplate: (id: string) => Promise<void>;
 
-  restoreData: (data: Partial<AppState>) => void;
+  restoreData: (data: Partial<AppState>) => Promise<void>;
 }

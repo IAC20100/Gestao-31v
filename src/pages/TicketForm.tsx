@@ -152,7 +152,7 @@ export default function TicketForm() {
   };
 
   return (
-    <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-8 md:p-12 overflow-x-hidden relative flex flex-col">
+    <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-4 sm:p-8 md:p-12 overflow-x-hidden relative flex flex-col">
       {/* Background Decorative Elements */}
       <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
         <svg className="w-full h-full" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
@@ -161,38 +161,38 @@ export default function TicketForm() {
         </svg>
       </div>
 
-      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 shrink-0">
-        <div className="flex items-center gap-6">
-          <BackButton />
+      <header className="mb-6 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 relative z-10 shrink-0">
+        <div className="flex items-center gap-4 md:gap-6">
+          <BackButton iconSize={6} className="p-3 md:p-4" />
           <div>
-            <h1 className="text-6xl font-light tracking-tight">
+            <h1 className="text-3xl md:text-6xl font-light tracking-tight">
               {id ? 'Editar OS' : 'Nova OS'}
             </h1>
-            <p className="text-xl opacity-60 mt-2 font-light">Preencha os dados da Ordem de Serviço</p>
+            <p className="text-sm md:text-xl opacity-60 mt-1 md:mt-2 font-light">Preencha os dados da Ordem de Serviço</p>
           </div>
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto w-full relative z-10 mb-8">
-        <div className="flex bg-white/5 backdrop-blur-md rounded-2xl p-2 border border-white/10">
+      <div className="max-w-5xl mx-auto w-full relative z-10 mb-6 md:mb-8">
+        <div className="flex flex-col sm:flex-row bg-white/5 backdrop-blur-md rounded-2xl p-2 border border-white/10 gap-1 sm:gap-0">
           <button 
             type="button"
             onClick={() => setActiveTab('geral')}
-            className={`flex-1 py-4 rounded-xl font-bold tracking-widest uppercase text-xs transition-all ${activeTab === 'geral' ? 'bg-white/20 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+            className={`flex-1 py-3 md:py-4 rounded-xl font-bold tracking-widest uppercase text-[10px] md:text-xs transition-all ${activeTab === 'geral' ? 'bg-white/20 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
           >
             Informações Gerais
           </button>
           <button 
             type="button"
             onClick={() => setActiveTab('servico')}
-            className={`flex-1 py-4 rounded-xl font-bold tracking-widest uppercase text-xs transition-all ${activeTab === 'servico' ? 'bg-white/20 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+            className={`flex-1 py-3 md:py-4 rounded-xl font-bold tracking-widest uppercase text-[10px] md:text-xs transition-all ${activeTab === 'servico' ? 'bg-white/20 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
           >
             Detalhes do Serviço
           </button>
           <button 
             type="button"
             onClick={() => setActiveTab('fotos')}
-            className={`flex-1 py-4 rounded-xl font-bold tracking-widest uppercase text-xs transition-all ${activeTab === 'fotos' ? 'bg-white/20 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
+            className={`flex-1 py-3 md:py-4 rounded-xl font-bold tracking-widest uppercase text-[10px] md:text-xs transition-all ${activeTab === 'fotos' ? 'bg-white/20 text-white shadow-lg' : 'text-white/40 hover:text-white/60'}`}
           >
             Fotos do Serviço
           </button>
@@ -216,41 +216,41 @@ export default function TicketForm() {
                 className="space-y-10"
               >
                 {/* Informações Básicas */}
-                <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] border border-white/10 p-10 shadow-2xl">
-                  <h2 className="text-2xl font-bold mb-10 flex items-center gap-3">
-                    <Info className="w-6 h-6 text-blue-400" />
+                <div className="bg-white/5 backdrop-blur-md rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 p-6 md:p-10 shadow-2xl">
+                  <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-10 flex items-center gap-3">
+                    <Info className="w-5 h-5 md:w-6 md:h-6 text-blue-400" />
                     Informações Básicas
                   </h2>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Nº OS</label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Nº OS</label>
                       <input 
                         type="text"
                         value={osNumber}
                         onChange={(e) => setOsNumber(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl placeholder:text-white/10"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl placeholder:text-white/10"
                         placeholder="Gerado automaticamente se vazio"
                       />
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Título da Tarefa</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Título da Tarefa</label>
                       <input 
                         type="text"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl placeholder:text-white/10"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl placeholder:text-white/10"
                         placeholder="Ex: Manutenção do Ar Condicionado"
                       />
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Tipo de Ordem</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Tipo de Ordem</label>
                       <select 
                         value={type}
                         onChange={(e) => setType(e.target.value as TicketType)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl appearance-none cursor-pointer"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl appearance-none cursor-pointer"
                       >
                         <option value="CORRETIVA" className="bg-[#004a7c]">Manutenção Corretiva</option>
                         <option value="PREVENTIVA" className="bg-[#004a7c]">Manutenção Preventiva</option>
@@ -258,12 +258,12 @@ export default function TicketForm() {
                       </select>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Status</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Status</label>
                       <select 
                         value={status}
                         onChange={(e) => setStatus(e.target.value as TicketStatus)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl appearance-none cursor-pointer"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl appearance-none cursor-pointer"
                       >
                         <option value="APROVADO" className="bg-[#004a7c]">Aprovado</option>
                         <option value="AGUARDANDO_MATERIAL" className="bg-[#004a7c]">Aguardando Material</option>
@@ -272,15 +272,15 @@ export default function TicketForm() {
                       </select>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Categoria de Manutenção</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Categoria de Manutenção</label>
                       <select 
                         value={maintenanceCategory}
                         onChange={(e) => {
                           setMaintenanceCategory(e.target.value);
                           setMaintenanceSubcategory('');
                         }}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl appearance-none cursor-pointer"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl appearance-none cursor-pointer"
                       >
                         <option value="" className="bg-[#004a7c]">Selecione uma categoria...</option>
                         {Object.keys(MAINTENANCE_CATEGORIES).map(cat => (
@@ -289,12 +289,12 @@ export default function TicketForm() {
                       </select>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Subcategoria</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Subcategoria</label>
                       <select 
                         value={maintenanceSubcategory}
                         onChange={(e) => setMaintenanceSubcategory(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl appearance-none cursor-pointer disabled:opacity-50"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl appearance-none cursor-pointer disabled:opacity-50"
                         disabled={!maintenanceCategory}
                       >
                         <option value="" className="bg-[#004a7c]">Selecione uma subcategoria...</option>
@@ -304,12 +304,12 @@ export default function TicketForm() {
                       </select>
                     </div>
                     
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Cliente / Condomínio</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Cliente / Condomínio</label>
                       <select 
                         value={clientId}
                         onChange={(e) => setClientId(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl appearance-none cursor-pointer"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl appearance-none cursor-pointer"
                         required={type !== 'TAREFA'}
                       >
                         <option value="" className="bg-[#004a7c]">Selecione um cliente...</option>
@@ -319,19 +319,19 @@ export default function TicketForm() {
                       </select>
                     </div>
 
-                    <div className="space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Data</label>
+                    <div className="space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Data</label>
                       <input 
                         type="date"
                         value={date}
                         onChange={(e) => setDate(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl"
                       />
                     </div>
 
-                    <div className="md:col-span-2 space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Cor do Cartão (Opcional)</label>
-                      <div className="flex flex-wrap gap-4 p-4 bg-white/5 rounded-2xl border border-white/10">
+                    <div className="md:col-span-2 space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Cor do Cartão (Opcional)</label>
+                      <div className="flex flex-wrap gap-2 md:gap-4 p-3 md:p-4 bg-white/5 rounded-xl md:rounded-2xl border border-white/10">
                         {[
                           { name: 'Padrão', value: '' },
                           { name: 'Verde', value: '#16a34a' },
@@ -347,46 +347,46 @@ export default function TicketForm() {
                             key={c.value}
                             type="button"
                             onClick={() => setColor(c.value)}
-                            className={`w-12 h-12 rounded-full border-2 transition-all ${
+                            className={`w-8 h-8 md:w-12 md:h-12 rounded-full border-2 transition-all ${
                               color === c.value ? 'border-white scale-110 shadow-lg' : 'border-transparent hover:scale-105'
                             }`}
                             style={{ backgroundColor: c.value || 'rgba(255,255,255,0.1)' }}
                             title={c.name}
                           >
-                            {c.value === '' && <X className="w-6 h-6 mx-auto text-white/40" />}
+                            {c.value === '' && <X className="w-4 h-4 md:w-6 md:h-6 mx-auto text-white/40" />}
                           </button>
                         ))}
-                        <div className="flex items-center gap-3 ml-auto">
-                          <span className="text-xs font-bold uppercase tracking-widest text-white/40">Personalizada:</span>
+                        <div className="flex items-center gap-2 md:gap-3 ml-auto">
+                          <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-white/40">Personalizada:</span>
                           <input 
                             type="color"
                             value={color.startsWith('#') ? color : '#ffffff'}
                             onChange={(e) => setColor(e.target.value)}
-                            className="w-10 h-10 bg-transparent border-none cursor-pointer"
+                            className="w-8 h-8 md:w-10 md:h-10 bg-transparent border-none cursor-pointer"
                           />
                         </div>
                       </div>
                     </div>
 
-                    <div className="md:col-span-2 space-y-3">
-                      <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Técnico Responsável</label>
+                    <div className="md:col-span-2 space-y-2 md:space-y-3">
+                      <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1">Técnico Responsável</label>
                       <input 
                         type="text"
                         value={technician}
                         onChange={(e) => setTechnician(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-xl placeholder:text-white/10"
+                        className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-xl placeholder:text-white/10"
                         placeholder="Nome do técnico"
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-white/5 backdrop-blur-md rounded-[2.5rem] border border-white/10 p-10 shadow-2xl">
-                  <label className="block text-sm font-bold uppercase tracking-widest text-white/40 ml-1 mb-4">Observações Gerais</label>
+                <div className="bg-white/5 backdrop-blur-md rounded-[1.5rem] md:rounded-[2.5rem] border border-white/10 p-6 md:p-10 shadow-2xl">
+                  <label className="block text-xs md:text-sm font-bold uppercase tracking-widest text-white/40 ml-1 mb-4">Observações Gerais</label>
                   <textarea 
                     value={observations}
                     onChange={(e) => setObservations(e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-2xl px-6 py-5 outline-none transition-all text-white text-lg min-h-[120px] resize-none"
+                    className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl md:rounded-2xl px-4 md:px-6 py-3 md:py-5 outline-none transition-all text-white text-base md:text-lg min-h-[120px] resize-none"
                     placeholder="Alguma observação adicional importante?"
                   />
                 </div>

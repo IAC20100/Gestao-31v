@@ -452,6 +452,12 @@ export const useStore = create<AppState>()(
             if (companySettingsData.tile_order) {
               newState.tileOrder = companySettingsData.tile_order;
             }
+            if (companySettingsData.hidden_tiles) {
+              newState.hiddenTiles = companySettingsData.hidden_tiles;
+            }
+            if (companySettingsData.energy_data) {
+              newState.energyData = companySettingsData.energy_data;
+            }
           }
 
           set(newState);
@@ -1993,24 +1999,415 @@ export const useStore = create<AppState>()(
         }
       },
 
-      restoreData: (data) => set((state) => ({
-        ...state,
-        ...data,
-        // Ensure we don't accidentally overwrite functions if they were included in JSON
-        clients: data.clients || state.clients,
-        checklistItems: data.checklistItems || state.checklistItems,
-        tickets: data.tickets || state.tickets,
-        quotes: data.quotes || state.quotes,
-        receipts: data.receipts || state.receipts,
-        costs: data.costs || state.costs,
-        appointments: data.appointments || state.appointments,
-        products: data.products || state.products,
-        companyLogo: data.companyLogo !== undefined ? data.companyLogo : state.companyLogo,
-        companySignature: data.companySignature !== undefined ? data.companySignature : state.companySignature,
-        companyData: data.companyData !== undefined ? data.companyData : state.companyData,
-        theme: data.theme || state.theme,
-        menuOrder: data.menuOrder || state.menuOrder,
-        hiddenTiles: data.hiddenTiles || state.hiddenTiles,
-      })),
+      restoreData: async (data) => {
+        set((state) => ({
+          ...state,
+          ...data,
+          // Ensure we don't accidentally overwrite functions if they were included in JSON
+          clients: data.clients || state.clients,
+          checklistItems: data.checklistItems || state.checklistItems,
+          tickets: data.tickets || state.tickets,
+          quotes: data.quotes || state.quotes,
+          receipts: data.receipts || state.receipts,
+          costs: data.costs || state.costs,
+          appointments: data.appointments || state.appointments,
+          products: data.products || state.products,
+          suppliers: data.suppliers || state.suppliers,
+          supplyItems: data.supplyItems || state.supplyItems,
+          supplyQuotations: data.supplyQuotations || state.supplyQuotations,
+          payments: data.payments || state.payments,
+          legalAgreements: data.legalAgreements || state.legalAgreements,
+          scheduledMaintenances: data.scheduledMaintenances || state.scheduledMaintenances,
+          notifications: data.notifications || state.notifications,
+          consumptionReadings: data.consumptionReadings || state.consumptionReadings,
+          digitalFolder: data.digitalFolder || state.digitalFolder,
+          notices: data.notices || state.notices,
+          packages: data.packages || state.packages,
+          visitors: data.visitors || state.visitors,
+          criticalEvents: data.criticalEvents || state.criticalEvents,
+          energyData: data.energyData || state.energyData,
+          savingsGoals: data.savingsGoals || state.savingsGoals,
+          assemblies: data.assemblies || state.assemblies,
+          documentTemplates: data.documentTemplates || state.documentTemplates,
+          companyLogo: data.companyLogo !== undefined ? data.companyLogo : state.companyLogo,
+          companySignature: data.companySignature !== undefined ? data.companySignature : state.companySignature,
+          companyData: data.companyData !== undefined ? data.companyData : state.companyData,
+          theme: data.theme || state.theme,
+          menuOrder: data.menuOrder || state.menuOrder,
+          hiddenTiles: data.hiddenTiles || state.hiddenTiles,
+          tileSizes: data.tileSizes || state.tileSizes,
+          tileOrder: data.tileOrder || state.tileOrder,
+        }));
+
+        if (!isSupabaseConfigured) return;
+
+        const loadingToast = toast.loading('Sincronizando backup com o servidor...');
+
+        try {
+          // 1. Clients
+          if (data.clients) {
+            await supabase.from('clients').upsert(data.clients.map(c => ({
+              id: c.id,
+              name: c.name,
+              document: c.document,
+              contact_person: c.contactPerson,
+              phone: c.phone,
+              email: c.email,
+              address: c.address,
+              notes: c.notes
+            })));
+          }
+
+          // 2. Tickets
+          if (data.tickets) {
+            await supabase.from('tickets').upsert(data.tickets.map(t => ({
+              id: t.id,
+              os_number: t.osNumber,
+              title: t.title,
+              type: t.type,
+              status: t.status,
+              maintenance_category: t.maintenanceCategory,
+              maintenance_subcategory: t.maintenanceSubcategory,
+              client_id: t.clientId,
+              date: t.date,
+              technician: t.technician,
+              observations: t.observations,
+              reported_problem: t.reportedProblem,
+              products_for_quote: t.productsForQuote,
+              service_report: t.serviceReport,
+              checklist_results: t.checklistResults,
+              images: t.images,
+              reported_by: t.reportedBy,
+              location: t.location,
+              photo_before: t.photoBefore,
+              budget_amount: t.budgetAmount,
+              budget_approved: t.budgetApproved,
+              color: t.color,
+              history: t.history
+            })));
+          }
+
+          // 3. Products
+          if (data.products) {
+            await supabase.from('products').upsert(data.products.map(p => ({
+              id: p.id,
+              code: p.code,
+              name: p.name,
+              description: p.description,
+              price: p.price,
+              unit: p.unit
+            })));
+          }
+
+          // 4. Quotes
+          if (data.quotes) {
+            await supabase.from('quotes').upsert(data.quotes.map(q => ({
+              id: q.id,
+              client_id: q.clientId,
+              date: q.date,
+              total_value: q.totalValue,
+              status: q.status,
+              items: q.items
+            })));
+          }
+
+          // 5. Receipts
+          if (data.receipts) {
+            await supabase.from('receipts').upsert(data.receipts.map(r => ({
+              id: r.id,
+              client_id: r.clientId,
+              date: r.date,
+              value: r.value,
+              description: r.description
+            })));
+          }
+
+          // 6. Costs
+          if (data.costs) {
+            await supabase.from('costs').upsert(data.costs.map(c => ({
+              id: c.id,
+              description: c.description,
+              value: c.value,
+              date: c.date,
+              category: c.category
+            })));
+          }
+
+          // 7. Appointments
+          if (data.appointments) {
+            await supabase.from('appointments').upsert(data.appointments.map(a => ({
+              id: a.id,
+              title: a.title,
+              start_time: a.start,
+              end_time: a.end,
+              type: a.type,
+              ticket_id: a.ticketId,
+              notes: a.notes
+            })));
+          }
+
+          // 8. Checklist Items
+          if (data.checklistItems) {
+            await supabase.from('checklist_items').upsert(data.checklistItems.map(i => ({
+              id: i.id,
+              task: i.task,
+              category: i.category,
+              client_id: i.clientId,
+              client_ids: i.clientIds
+            })));
+          }
+
+          // 9. Suppliers
+          if (data.suppliers) {
+            await supabase.from('suppliers').upsert(data.suppliers.map(s => ({
+              id: s.id,
+              name: s.name,
+              contact: s.contact,
+              phone: s.phone,
+              email: s.email,
+              category: s.category
+            })));
+          }
+
+          // 10. Supply Items
+          if (data.supplyItems) {
+            await supabase.from('supply_items').upsert(data.supplyItems.map(i => ({
+              id: i.id,
+              name: i.name,
+              category: i.category,
+              current_stock: i.currentStock,
+              min_stock: i.minStock,
+              unit: i.unit,
+              last_price: i.lastPrice,
+              client_id: i.clientId
+            })));
+          }
+
+          // 11. Payments
+          if (data.payments) {
+            await supabase.from('payments').upsert(data.payments.map(p => ({
+              id: p.id,
+              client_id: p.clientId,
+              amount: p.amount,
+              due_date: p.dueDate,
+              payment_date: p.paymentDate,
+              status: p.status,
+              reference: p.reference
+            })));
+          }
+
+          // 12. Legal Agreements
+          if (data.legalAgreements) {
+            await supabase.from('legal_agreements').upsert(data.legalAgreements.map(a => ({
+              id: a.id,
+              client_id: a.clientId,
+              total_amount: a.totalAmount,
+              installments: a.installments,
+              remaining_installments: a.remainingInstallments,
+              status: a.status,
+              start_date: a.startDate,
+              notes: a.notes
+            })));
+          }
+
+          // 13. Scheduled Maintenances
+          if (data.scheduledMaintenances) {
+            await supabase.from('scheduled_maintenances').upsert(data.scheduledMaintenances.map(m => ({
+              id: m.id,
+              client_id: m.clientId,
+              standard_id: m.standardId,
+              item: m.item,
+              frequency: m.frequency,
+              last_done: m.lastDone,
+              next_date: m.nextDate,
+              status: m.status,
+              category: m.category
+            })));
+          }
+
+          // 14. Consumption Readings
+          if (data.consumptionReadings) {
+            await supabase.from('consumption_readings').upsert(data.consumptionReadings.map(r => ({
+              id: r.id,
+              client_id: r.clientId,
+              type: r.type,
+              previous_value: r.previousValue,
+              current_value: r.currentValue,
+              consumption: r.consumption,
+              date: r.date,
+              unit: r.unit,
+              billed: r.billed
+            })));
+          }
+
+          // 15. Assemblies
+          if (data.assemblies) {
+            await supabase.from('assemblies').upsert(data.assemblies.map(a => ({
+              id: a.id,
+              title: a.title,
+              description: a.description,
+              date: a.date,
+              status: a.status,
+              options: a.options,
+              votes: a.votes,
+              legal_validity_hash: a.legalValidityHash
+            })));
+          }
+
+          // 16. Notices
+          if (data.notices) {
+            await supabase.from('notices').upsert(data.notices.map(n => ({
+              id: n.id,
+              title: n.title,
+              content: n.content,
+              date: n.date,
+              category: n.category,
+              tower: n.tower,
+              apartment_line: n.apartmentLine,
+              client_id: n.clientId
+            })));
+          }
+
+          // 17. Packages
+          if (data.packages) {
+            await supabase.from('packages').upsert(data.packages.map(p => ({
+              id: p.id,
+              resident_name: p.residentName,
+              apartment: p.apartment,
+              tower: p.tower,
+              carrier: p.carrier,
+              tracking_code: p.trackingCode,
+              received_at: p.receivedAt,
+              picked_up_at: p.pickedUpAt,
+              status: p.status,
+              qr_code: p.qrCode,
+              photo_url: p.photoUrl,
+              client_id: p.clientId
+            })));
+          }
+
+          // 18. Visitors
+          if (data.visitors) {
+            await supabase.from('visitors').upsert(data.visitors.map(v => ({
+              id: v.id,
+              name: v.name,
+              document: v.document,
+              type: v.type,
+              apartment: v.apartment,
+              tower: v.tower,
+              valid_until: v.validUntil,
+              qr_code: v.qrCode,
+              status: v.status
+            })));
+          }
+
+          // 19. Critical Events
+          if (data.criticalEvents) {
+            await supabase.from('critical_events').upsert(data.criticalEvents.map(e => ({
+              id: e.id,
+              device: e.device,
+              location: e.location,
+              type: e.type,
+              status: e.status,
+              last_update: e.lastUpdate,
+              description: e.description
+            })));
+          }
+
+          // 20. Digital Folder
+          if (data.digitalFolder) {
+            await supabase.from('digital_folder').upsert(data.digitalFolder.map(i => ({
+              id: i.id,
+              client_id: i.clientId,
+              title: i.title,
+              description: i.description,
+              category: i.category,
+              date: i.date,
+              amount: i.amount,
+              file_url: i.fileUrl,
+              status: i.status,
+              signatures: i.signatures
+            })));
+          }
+
+          // 21. Supply Quotations
+          if (data.supplyQuotations) {
+            await supabase.from('supply_quotations').upsert(data.supplyQuotations.map(q => ({
+              id: q.id,
+              date: q.date,
+              items: q.items,
+              responses: q.responses,
+              status: q.status
+            })));
+          }
+
+          // 22. Notifications
+          if (data.notifications) {
+            await supabase.from('notifications').upsert(data.notifications.map(n => ({
+              id: n.id,
+              title: n.title,
+              message: n.message,
+              type: n.type,
+              date: n.date,
+              read: n.read,
+              link: n.link
+            })));
+          }
+
+          // 23. Savings Goals
+          if (data.savingsGoals) {
+            await supabase.from('savings_goals').upsert(data.savingsGoals.map(g => ({
+              id: g.id,
+              title: g.title,
+              target_amount: g.targetAmount,
+              current_amount: g.currentAmount,
+              deadline: g.deadline,
+              category: g.category,
+              icon: g.icon,
+              status: g.status
+            })));
+          }
+
+          // 24. Document Templates
+          if (data.documentTemplates) {
+            await supabase.from('document_templates').upsert(data.documentTemplates.map(t => ({
+              id: t.id,
+              title: t.title,
+              category: t.category,
+              description: t.description,
+              legal_basis: t.legalBasis,
+              content: t.content,
+              file_url: t.fileUrl
+            })));
+          }
+
+          // 25. Company Settings
+          const companySettingsId = get().companySettingsId;
+          if (companySettingsId && data.companyData) {
+            await supabase.from('company_settings').upsert({
+              id: companySettingsId,
+              name: data.companyData.name,
+              document: data.companyData.document,
+              phone: data.companyData.phone,
+              email: data.companyData.email,
+              address: data.companyData.address,
+              website: data.companyData.website,
+              logo_url: data.companyLogo,
+              signature_url: data.companySignature,
+              theme: data.theme,
+              menu_order: data.menuOrder,
+              hidden_tiles: data.hiddenTiles,
+              tile_sizes: data.tileSizes,
+              tile_order: data.tileOrder,
+              energy_data: data.energyData
+            });
+          }
+
+          toast.success('Backup restaurado e sincronizado com sucesso!', { id: loadingToast });
+        } catch (error) {
+          console.error('Erro ao sincronizar backup com Supabase:', error);
+          toast.error('Erro ao sincronizar dados com o servidor.', { id: loadingToast });
+        }
+      },
     })
 );

@@ -152,17 +152,17 @@ function WeatherTile() {
           <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest">Live</span>
         </div>
       </div>
-      <div className="flex items-center gap-6 h-full relative z-10">
-        <div className="relative group-hover:scale-110 transition-transform duration-500">
-          <SunIcon className="w-16 h-16 text-yellow-300 drop-shadow-[0_0_15px_rgba(253,224,71,0.5)]" />
-          <CloudSun className="w-10 h-10 text-white absolute -bottom-1 -right-1 drop-shadow-lg" />
+      <div className="flex items-center gap-3 md:gap-6 h-full relative z-10">
+        <div className="relative group-hover:scale-110 transition-transform duration-500 shrink-0">
+          <SunIcon className="w-10 h-10 md:w-16 md:h-16 text-yellow-300 drop-shadow-[0_0_15px_rgba(253,224,71,0.5)]" />
+          <CloudSun className="w-6 h-6 md:w-10 md:h-10 text-white absolute -bottom-1 -right-1 drop-shadow-lg" />
         </div>
-        <div>
-          <span className="text-5xl font-light drop-shadow-lg">{data ? `${data.temp}°` : '--°'}</span>
-          <div className="mt-1">
-            <p className="text-sm font-bold uppercase tracking-wider drop-shadow-md">{data?.city || 'Carregando...'}</p>
-            <p className="text-xs opacity-80 drop-shadow-sm">{data?.condition || '...'}</p>
-            {data && <p className="text-[10px] opacity-60">{data.high}° / {data.low}°</p>}
+        <div className="min-w-0">
+          <span className="text-3xl md:text-5xl font-light drop-shadow-lg">{data ? `${data.temp}°` : '--°'}</span>
+          <div className="mt-0.5 md:mt-1 min-w-0">
+            <p className="text-[10px] md:text-sm font-bold uppercase tracking-wider drop-shadow-md truncate">{data?.city || 'Carregando...'}</p>
+            <p className="text-[8px] md:text-xs opacity-80 drop-shadow-sm truncate">{data?.condition || '...'}</p>
+            {data && <p className="text-[8px] md:text-[10px] opacity-60">{data.high}° / {data.low}°</p>}
           </div>
         </div>
       </div>
@@ -270,8 +270,8 @@ export default function Dashboard() {
             <Users className="w-12 h-12 text-white drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
           </div>
           <div className="flex justify-between items-end relative z-10">
-            <span className="text-[10px] font-bold uppercase tracking-wider drop-shadow-md">Clientes</span>
-            <span className="text-2xl font-light drop-shadow-lg">{clients.length}</span>
+            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider drop-shadow-md truncate mr-1">Clientes</span>
+            <span className="text-xl sm:text-2xl font-light drop-shadow-lg shrink-0">{clients.length}</span>
           </div>
         </Link>
       )
@@ -286,8 +286,8 @@ export default function Dashboard() {
             <Package className="w-12 h-12 text-white drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
           </div>
           <div className="flex justify-between items-end relative z-10">
-            <span className="text-[10px] font-bold uppercase tracking-wider drop-shadow-md">Produtos</span>
-            <span className="text-2xl font-light drop-shadow-lg">{products.length}</span>
+            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider drop-shadow-md truncate mr-1">Produtos</span>
+            <span className="text-xl sm:text-2xl font-light drop-shadow-lg shrink-0">{products.length}</span>
           </div>
         </Link>
       )
@@ -302,8 +302,8 @@ export default function Dashboard() {
             <FileText className="w-12 h-12 text-white drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
           </div>
           <div className="flex justify-between items-end relative z-10">
-            <span className="text-[10px] font-bold uppercase tracking-wider drop-shadow-md">Recibos</span>
-            <span className="text-2xl font-light drop-shadow-lg">{receipts.length}</span>
+            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider drop-shadow-md truncate mr-1">Recibos</span>
+            <span className="text-xl sm:text-2xl font-light drop-shadow-lg shrink-0">{receipts.length}</span>
           </div>
         </Link>
       )
@@ -323,23 +323,23 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="flex justify-between items-end relative z-10 mt-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                <TrendingUp className="w-5 h-5 text-white" />
+          <div className="flex justify-between items-end relative z-10 mt-2 gap-2">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <div className="p-1.5 md:p-2 bg-white/20 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
+                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md">Financeiro</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest">Inteligência Ativa</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md truncate">Financeiro</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-[6px] md:text-[8px] font-bold text-white/50 uppercase tracking-widest truncate">Inteligência Ativa</span>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col items-end">
-              <p className="text-[8px] font-black uppercase text-white/50 mb-0.5">Saldo Atual</p>
-              <div className="bg-black/20 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
-                <span className="text-sm font-black drop-shadow-lg text-white">
+            <div className="flex flex-col items-end shrink-0">
+              <p className="text-[6px] md:text-[8px] font-black uppercase text-white/50 mb-0.5">Saldo Atual</p>
+              <div className="bg-black/20 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-white/10 backdrop-blur-md">
+                <span className="text-xs md:text-sm font-black drop-shadow-lg text-white">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(saldo)}
                 </span>
               </div>
@@ -354,18 +354,18 @@ export default function Dashboard() {
       component: (
         <Link to="/calendar" className="w-full h-full bg-gradient-to-br from-[#4285f4] to-[#3367d6] hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95 text-white">
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          <div className="flex items-start gap-4 h-full relative z-10">
-            <div className="p-2 md:p-3 bg-white/20 rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500">
-              <CalendarIcon className="w-8 h-8 md:w-10 md:h-10 text-white" />
+          <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
+            <div className="p-1.5 md:p-3 bg-white/20 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
+              <CalendarIcon className="w-6 h-6 md:w-10 md:h-10 text-white" />
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[9px] md:text-[10px] font-black uppercase text-white/70 mb-1 tracking-[0.2em]">Agenda</p>
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Agenda</p>
               {nextAppointment ? (
-                <div className="space-y-1">
-                  <p className="font-black text-sm md:text-xl truncate text-white leading-tight">{nextAppointment.title}</p>
-                  <div className="flex items-center gap-2 text-white/80">
-                    <Clock className="w-3 h-3" />
-                    <p className="text-xs md:text-sm font-medium truncate">
+                <div className="space-y-0.5 md:space-y-1">
+                  <p className="font-black text-xs md:text-xl truncate text-white leading-tight">{nextAppointment.title}</p>
+                  <div className="flex items-center gap-1.5 md:gap-2 text-white/80">
+                    <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 shrink-0" />
+                    <p className="text-[10px] md:text-sm font-medium truncate">
                       {nextAppointment.start ? (
                         <>
                           {new Date(nextAppointment.start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {new Date(nextAppointment.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
@@ -377,7 +377,7 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <p className="text-xs italic text-white/60 mt-2">Sem compromissos</p>
+                <p className="text-[10px] md:text-xs italic text-white/60 mt-1">Sem compromissos</p>
               )}
             </div>
           </div>
@@ -391,22 +391,22 @@ export default function Dashboard() {
       component: (
         <Link to="/intelligent-checklist" className="w-full h-full bg-gradient-to-br from-[#004a7c] to-[#002a4c] hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95 text-white">
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          <div className="flex items-start gap-4 h-full relative z-10">
-            <div className="p-2 md:p-3 bg-white/10 rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500">
-              <ClipboardCheck className="w-8 h-8 md:w-10 md:h-10 text-white" />
+          <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
+            <div className="p-1.5 md:p-3 bg-white/10 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
+              <ClipboardCheck className="w-6 h-6 md:w-10 md:h-10 text-white" />
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[9px] md:text-[10px] font-black uppercase text-white/70 mb-1 tracking-[0.2em]">Manutenção Preventiva</p>
-              <div className="space-y-1">
-                <p className="font-black text-sm md:text-xl truncate text-white leading-tight">NBR 5674</p>
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-white/20 rounded-full overflow-hidden max-w-[100px]">
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Manutenção Preventiva</p>
+              <div className="space-y-0.5 md:space-y-1">
+                <p className="font-black text-xs md:text-xl truncate text-white leading-tight">NBR 5674</p>
+                <div className="flex items-center gap-1.5 md:gap-2">
+                  <div className="flex-1 h-1 md:h-1.5 bg-white/20 rounded-full overflow-hidden max-w-[60px] md:max-w-[100px]">
                     <div 
                       className={`h-full transition-all duration-1000 ${overdueMaintenances > 0 ? 'bg-amber-400' : 'bg-emerald-400'}`}
                       style={{ width: overdueMaintenances > 0 ? '40%' : '100%' }}
                     />
                   </div>
-                  <p className={`text-[10px] md:text-xs font-bold ${overdueMaintenances > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                  <p className={`text-[8px] md:text-xs font-bold ${overdueMaintenances > 0 ? 'text-amber-400' : 'text-emerald-400'} truncate`}>
                     {overdueMaintenances > 0 ? `${overdueMaintenances} pendentes` : '100% em dia'}
                   </p>
                 </div>
@@ -415,9 +415,9 @@ export default function Dashboard() {
           </div>
           <div className="flex justify-between items-end relative z-10">
             <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] text-white/70">Manutenção Preventiva</span>
-            <div className="flex items-center gap-2 bg-white/10 px-2 py-1 rounded-lg border border-white/10">
-              <ShieldCheck className="w-3 h-3 text-emerald-400" />
-              <span className="text-[9px] font-bold uppercase tracking-tight text-white/70">Conformidade Legal</span>
+            <div className="flex items-center gap-1 md:gap-2 bg-white/10 px-1.5 md:px-2 py-0.5 md:py-1 rounded-lg border border-white/10 shrink-0">
+              <ShieldCheck className="w-2.5 h-2.5 md:w-3 md:h-3 text-emerald-400" />
+              <span className="text-[7px] md:text-[9px] font-bold uppercase tracking-tight text-white/70">Conformidade Legal</span>
             </div>
           </div>
         </Link>
@@ -433,8 +433,8 @@ export default function Dashboard() {
             <QrCode className="w-12 h-12 text-white drop-shadow-lg group-hover:scale-110 transition-transform duration-500" />
           </div>
           <div className="flex justify-between items-end relative z-10">
-            <span className="text-[10px] font-bold uppercase tracking-wider drop-shadow-md">QR Codes</span>
-            <span className="text-2xl font-light drop-shadow-lg">Gerir</span>
+            <span className="text-[8px] sm:text-[10px] font-bold uppercase tracking-wider drop-shadow-md truncate mr-1">QR Codes</span>
+            <span className="text-xl sm:text-2xl font-light drop-shadow-lg shrink-0">Gerir</span>
           </div>
         </Link>
       )
@@ -449,30 +449,30 @@ export default function Dashboard() {
             : 'bg-gradient-to-br from-zinc-800 to-zinc-900'
         }`}>
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          <div className="flex items-start gap-4 h-full relative z-10">
-            <div className="p-3 bg-white/20 rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500">
-              <MessageSquare className="w-10 h-10 text-white" />
+          <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
+            <div className="p-1.5 md:p-3 bg-white/20 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
+              <MessageSquare className="w-6 h-6 md:w-10 md:h-10 text-white" />
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[10px] font-black uppercase text-white/70 mb-1 tracking-[0.2em]">Relatos de Moradores</p>
-              <div className="space-y-1">
-                <p className="font-black text-xl truncate text-white leading-tight">Mensagens QR Code</p>
-                <div className="flex items-center gap-2 text-white/80">
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Relatos de Moradores</p>
+              <div className="space-y-0.5 md:space-y-1">
+                <p className="font-black text-xs md:text-xl truncate text-white leading-tight">Mensagens QR Code</p>
+                <div className="flex items-center gap-1.5 md:gap-2 text-white/80">
                   {tickets.filter(t => t.status === 'PENDENTE_APROVACAO' && t.reportedBy).length > 0 ? (
                     <>
-                      <AlertCircle className="w-4 h-4 text-white animate-pulse" />
-                      <p className="text-sm font-bold text-white">
+                      <AlertCircle className="w-3 h-3 md:w-4 md:h-4 text-white animate-pulse shrink-0" />
+                      <p className="text-[10px] md:text-sm font-bold text-white truncate">
                         {tickets.filter(t => t.status === 'PENDENTE_APROVACAO' && t.reportedBy).length} novos relatos
                       </p>
                     </>
                   ) : (
-                    <p className="text-sm font-medium">Nenhuma mensagem nova</p>
+                    <p className="text-[10px] md:text-sm font-medium truncate">Nenhuma mensagem nova</p>
                   )}
                 </div>
               </div>
             </div>
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70">Gestão de Chamados</span>
+          <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70">Gestão de Chamados</span>
         </Link>
       )
     },
@@ -486,30 +486,30 @@ export default function Dashboard() {
             : 'bg-gradient-to-br from-zinc-700 to-zinc-800'
         }`}>
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          <div className="flex items-start gap-4 h-full relative z-10">
-            <div className={`p-3 rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 ${
+          <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
+            <div className={`p-1.5 md:p-3 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0 ${
               pendingApprovalCount > 0 ? 'bg-white/30' : 'bg-white/10'
             }`}>
-              <Clock className="w-10 h-10 text-white" />
+              <Clock className="w-6 h-6 md:w-10 md:h-10 text-white" />
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[10px] font-black uppercase text-white/70 mb-1 tracking-[0.2em]">Aprovações Pendentes</p>
-              <div className="space-y-1">
-                <p className="font-black text-xl truncate text-white leading-tight">Orçamentos</p>
-                <div className="flex items-center gap-2 text-white/80">
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Aprovações Pendentes</p>
+              <div className="space-y-0.5 md:space-y-1">
+                <p className="font-black text-xs md:text-xl truncate text-white leading-tight">Orçamentos</p>
+                <div className="flex items-center gap-1.5 md:gap-2 text-white/80">
                   {pendingApprovalCount > 0 ? (
                     <>
-                      <AlertCircle className="w-4 h-4 text-white animate-pulse" />
-                      <p className="text-sm font-bold text-white">{pendingApprovalCount} aguardando síndico</p>
+                      <AlertCircle className="w-3 h-3 md:w-4 md:h-4 text-white animate-pulse shrink-0" />
+                      <p className="text-[10px] md:text-sm font-bold text-white truncate">{pendingApprovalCount} aguardando síndico</p>
                     </>
                   ) : (
-                    <p className="text-sm font-medium">Tudo em dia</p>
+                    <p className="text-[10px] md:text-sm font-medium truncate">Tudo em dia</p>
                   )}
                 </div>
               </div>
             </div>
           </div>
-          <span className="text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70">Gestão de OS</span>
+          <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70">Gestão de OS</span>
         </Link>
       )
     },
@@ -528,21 +528,21 @@ export default function Dashboard() {
             />
           </div>
 
-          <div className="flex justify-between items-end relative z-10 mt-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                <Columns className="w-5 h-5 text-white" />
+          <div className="flex justify-between items-end relative z-10 mt-2 gap-2">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <div className="p-1.5 md:p-2 bg-white/20 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
+                <Columns className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md">Kanban</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest">Mirror Live</span>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md truncate">Kanban</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-[6px] md:text-[8px] font-bold text-white/50 uppercase tracking-widest truncate">Mirror Live</span>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
-              <span className="text-xl font-black drop-shadow-lg">{tickets.length}</span>
+            <div className="flex items-center gap-1 md:gap-2 bg-black/20 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-white/10 backdrop-blur-md shrink-0">
+              <span className="text-sm md:text-xl font-black drop-shadow-lg">{tickets.length}</span>
             </div>
           </div>
         </Link>
@@ -587,23 +587,23 @@ export default function Dashboard() {
             : 'bg-gradient-to-br from-emerald-600 to-emerald-800'
         }`}>
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          <div className="flex items-start gap-4 h-full relative z-10">
-            <div className={`p-2 md:p-3 rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 ${
+          <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
+            <div className={`p-1.5 md:p-3 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0 ${
               lowStockCount > 0 ? 'bg-white/30' : 'bg-white/10'
             }`}>
-              <Package className="w-8 h-8 md:w-10 md:h-10 text-white" />
+              <Package className="w-6 h-6 md:w-10 md:h-10 text-white" />
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[9px] md:text-[10px] font-black uppercase text-white/70 mb-1 tracking-[0.2em]">Insumos</p>
-              <div className="space-y-1">
-                <p className="font-black text-sm md:text-xl truncate text-white leading-tight">Estoque</p>
-                <div className="flex items-center gap-2 text-white/80">
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Insumos</p>
+              <div className="space-y-0.5 md:space-y-1">
+                <p className="font-black text-xs md:text-xl truncate text-white leading-tight">Estoque</p>
+                <div className="flex items-center gap-1.5 md:gap-2 text-white/80">
                   {lowStockCount > 0 ? (
-                    <AlertTriangle className="w-4 h-4 text-white animate-pulse" />
+                    <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 text-white animate-pulse shrink-0" />
                   ) : (
-                    <CheckCircle2 className="w-4 h-4 text-white/60" />
+                    <CheckCircle2 className="w-3 h-3 md:w-4 md:h-4 text-white/60 shrink-0" />
                   )}
-                  <p className="text-xs md:text-sm font-bold truncate">
+                  <p className="text-[10px] md:text-sm font-bold truncate">
                     {lowStockCount > 0 ? `${lowStockCount} alertas` : 'Normal'}
                   </p>
                 </div>
@@ -1038,7 +1038,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen -m-6 md:-m-8 p-8 md:p-12 bg-[#004a7c] text-white overflow-x-hidden relative">
+    <div className="min-h-screen -m-6 md:-m-8 p-3 sm:p-8 md:p-12 bg-[#004a7c] text-white overflow-x-hidden relative">
       <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
         <svg className="w-full h-full" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
           <path d="M0,1000 C300,800 400,900 1000,600 L1000,1000 L0,1000 Z" fill="currentColor" className="text-white/5" fillOpacity="0.5" />
@@ -1046,43 +1046,43 @@ export default function Dashboard() {
         </svg>
       </div>
 
-      <header className="mb-12 flex justify-between items-start relative z-10">
-        <h1 className="text-6xl font-light tracking-tight text-white">Iniciar</h1>
-        <div className="flex items-center gap-6">
+      <header className="mb-4 md:mb-12 flex justify-between items-start relative z-10 gap-2">
+        <h1 className="text-3xl sm:text-4xl md:text-6xl font-light tracking-tight text-white shrink-0">Iniciar</h1>
+        <div className="flex items-center gap-2 md:gap-6 min-w-0">
           <button 
             onClick={toggleTheme}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white"
+            className="p-1.5 md:p-2 hover:bg-white/10 rounded-full transition-colors text-white/60 hover:text-white shrink-0"
           >
-            {theme === 'dark' ? <SunIcon className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+            {theme === 'dark' ? <SunIcon className="w-4 h-4 md:w-6 md:h-6" /> : <Moon className="w-4 h-4 md:w-6 md:h-6" />}
           </button>
-          <div className="text-right">
+          <div className="text-right min-w-0">
             {companyLogo ? (
-              <img src={companyLogo} alt="Logo" className="w-16 h-16 rounded-full object-cover border-2 border-white/20 mb-2 ml-auto" />
+              <img src={companyLogo} alt="Logo" className="w-10 h-10 md:w-16 md:h-16 rounded-full object-cover border-2 border-white/20 mb-1 md:mb-2 ml-auto" />
             ) : (
-              <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-white/60 mb-2 ml-auto">
-                <Database className="w-8 h-8" />
+              <div className="w-10 h-10 md:w-16 md:h-16 bg-white/10 rounded-full flex items-center justify-center text-white/60 mb-1 md:mb-2 ml-auto">
+                <Database className="w-5 h-5 md:w-8 md:h-8" />
               </div>
             )}
-            <div className="flex items-center justify-end gap-2 mb-1">
+            <div className="flex items-center justify-end gap-1 mb-1">
               {isSupabaseConfigured ? (
-                <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
-                  <Wifi className="w-3 h-3 text-emerald-400" />
-                  <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider">Conectado</span>
+                <div className="flex items-center gap-1 bg-emerald-500/20 px-1 md:px-1.5 py-0.5 rounded-full border border-emerald-500/30">
+                  <Wifi className="w-2 md:w-2.5 h-2 md:h-2.5 text-emerald-400" />
+                  <span className="text-[6px] md:text-[9px] font-black text-emerald-400 uppercase tracking-wider">Conectado</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
-                  <WifiOff className="w-3 h-3 text-amber-400" />
-                  <span className="text-[9px] font-black text-amber-400 uppercase tracking-wider">Local (Offline)</span>
+                <div className="flex items-center gap-1 bg-amber-500/20 px-1 md:px-1.5 py-0.5 rounded-full border border-amber-500/30">
+                  <WifiOff className="w-2 md:w-2.5 h-2 md:h-2.5 text-amber-400" />
+                  <span className="text-[6px] md:text-[9px] font-black text-amber-400 uppercase tracking-wider">Local</span>
                 </div>
               )}
             </div>
-            <p className="text-xl font-medium text-white">Administrador</p>
-            <p className="text-sm text-white/60 font-medium">IA COMPANY TEC</p>
+            <p className="text-sm sm:text-base md:text-xl font-medium text-white truncate">Administrador</p>
+            <p className="text-[8px] md:text-sm text-white/60 font-medium truncate">IA COMPANY TEC</p>
             <button 
               onClick={logout}
-              className="mt-1 text-[10px] font-black uppercase tracking-[0.2em] text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 ml-auto group"
+              className="mt-1 text-[7px] md:text-[10px] font-black uppercase tracking-[0.2em] text-red-400 hover:text-red-300 transition-colors flex items-center gap-1 ml-auto group"
             >
-              <LogOut className="w-3 h-3 group-hover:-translate-x-1 transition-transform" />
+              <LogOut className="w-2 h-2 md:w-2.5 md:h-2.5 group-hover:-translate-x-1 transition-transform" />
               Sair
             </button>
           </div>
@@ -1098,11 +1098,11 @@ export default function Dashboard() {
           items={tiles.map(t => t.id)}
           strategy={rectSortingStrategy}
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 relative z-10 max-w-[1400px] perspective-1000 grid-flow-dense">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2 md:gap-3 relative z-10 max-w-[1400px] perspective-1000 grid-flow-dense">
             {tiles.filter(t => !hiddenTiles.includes(t.id)).map((tile) => {
               const currentSize = tileSizes[tile.id] || (tile.type === 'wide' ? 'medium' : 'small');
               const sizeClasses = currentSize === 'small' ? 'col-span-1 row-span-1 aspect-square' :
-                                  currentSize === 'medium' ? 'col-span-2 row-span-1 aspect-[2/1]' :
+                                  currentSize === 'medium' ? 'col-span-2 row-span-1 aspect-[2/1] sm:aspect-video md:aspect-[2/1]' :
                                   'col-span-2 row-span-2 aspect-square';
               return (
                 <SortableTile 

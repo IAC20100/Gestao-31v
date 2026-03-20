@@ -68,7 +68,7 @@ export function TicketsMirror({ tickets, className = '', showLabel = true }: Tic
   ];
 
   return (
-    <div className={`relative bg-slate-900/70 backdrop-blur-[40px] border border-white/20 p-6 rounded-[2.5rem] shadow-2xl overflow-hidden text-white ${className}`}>
+    <div className={`relative bg-slate-900/70 backdrop-blur-[40px] border border-white/20 p-4 md:p-6 rounded-3xl md:rounded-[2.5rem] shadow-2xl overflow-hidden text-white ${className}`}>
       {/* Glass Shine Effect */}
       <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
       <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-rose-500/10 blur-[80px] pointer-events-none" />
@@ -76,37 +76,37 @@ export function TicketsMirror({ tickets, className = '', showLabel = true }: Tic
       
       {/* Header */}
       {showLabel && (
-        <div className="flex items-center justify-between mb-6 relative z-10">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-rose-500/20 rounded-2xl border border-rose-500/30 shadow-lg shadow-rose-500/10">
-              <Hammer className="w-5 h-5 text-rose-400" />
+        <div className="flex items-center justify-between mb-4 md:mb-6 relative z-10 gap-2">
+          <div className="flex items-center gap-2 md:gap-3 min-w-0">
+            <div className="p-2 md:p-2.5 bg-rose-500/20 rounded-xl md:rounded-2xl border border-rose-500/30 shadow-lg shadow-rose-500/10 shrink-0">
+              <Hammer className="w-4 h-4 md:w-5 md:h-5 text-rose-400" />
             </div>
-            <div>
-              <h3 className="text-sm font-black uppercase tracking-[0.2em] text-white/90">Gestão de OS</h3>
-              <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest">Monitoramento em Tempo Real</p>
+            <div className="min-w-0">
+              <h3 className="text-[10px] md:text-sm font-black uppercase tracking-[0.1em] md:tracking-[0.2em] text-white/90 truncate">Gestão de OS</h3>
+              <p className="text-[8px] md:text-[10px] text-white/40 font-bold uppercase tracking-widest truncate">Monitoramento Live</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 backdrop-blur-md">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-            <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider">Live</span>
+          <div className="flex items-center gap-1.5 md:gap-2 bg-white/5 px-2 md:px-3 py-1 md:py-1.5 rounded-full border border-white/10 backdrop-blur-md shrink-0">
+            <div className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
+            <span className="text-[8px] md:text-[10px] font-black text-emerald-400 uppercase tracking-wider">Live</span>
           </div>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative z-10">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 relative z-10">
         {/* Column 1: General Situation */}
         <div className="space-y-6">
-          <div className="bg-white/5 rounded-3xl p-4 border border-white/5 backdrop-blur-sm">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-4 flex items-center gap-2">
-              <Activity className="w-3 h-3" /> Situação Geral das OS
+          <div className="bg-white/5 rounded-2xl md:rounded-3xl p-3 md:p-4 border border-white/5 backdrop-blur-sm">
+            <h4 className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white/50 mb-3 md:mb-4 flex items-center gap-2 truncate">
+              <Activity className="w-2.5 md:w-3 h-2.5 md:h-3" /> Situação Geral
             </h4>
-            <div className="relative h-40 flex items-center justify-center">
+            <div className="relative h-32 md:h-40 flex items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={pieData}
-                    innerRadius={55}
-                    outerRadius={70}
+                    innerRadius={45}
+                    outerRadius={60}
                     paddingAngle={5}
                     dataKey="value"
                     stroke="none"
@@ -118,35 +118,35 @@ export function TicketsMirror({ tickets, className = '', showLabel = true }: Tic
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-2xl font-black tracking-tighter">{percentConcluded}%</span>
-                <span className="text-[7px] font-bold uppercase text-white/40 tracking-widest">Concluídas</span>
+                <span className="text-xl md:text-2xl font-black tracking-tighter">{percentConcluded}%</span>
+                <span className="text-[6px] md:text-[7px] font-bold uppercase text-white/40 tracking-widest">Concluídas</span>
               </div>
             </div>
-            <div className="mt-4 space-y-2">
+            <div className="mt-3 md:mt-4 space-y-1.5 md:space-y-2">
               {pieData.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-[10px]">
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full shadow-[0_0_5px_rgba(255,255,255,0.2)]" style={{ backgroundColor: item.color }} />
-                    <span className="text-white/60 font-bold uppercase tracking-tight">{item.name}</span>
+                <div key={item.name} className="flex items-center justify-between text-[9px] md:text-[10px]">
+                  <div className="flex items-center gap-1.5 md:gap-2 min-w-0">
+                    <div className="w-1.5 md:w-2 h-1.5 md:h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                    <span className="text-white/60 font-bold uppercase tracking-tight truncate">{item.name}</span>
                   </div>
-                  <span className="font-black text-white/90">{item.value}</span>
+                  <span className="font-black text-white/90 shrink-0 ml-1">{item.value}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-white/5 rounded-3xl p-4 border border-white/5 backdrop-blur-sm">
-            <h4 className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-3 flex items-center gap-2">
-              <Building2 className="w-3 h-3" /> OS por Torre (% Concluída)
+          <div className="bg-white/5 rounded-2xl md:rounded-3xl p-3 md:p-4 border border-white/5 backdrop-blur-sm">
+            <h4 className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-white/50 mb-2 md:mb-3 flex items-center gap-2 truncate">
+              <Building2 className="w-2.5 md:w-3 h-2.5 md:h-3" /> OS por Torre
             </h4>
-            <div className="space-y-3">
+            <div className="space-y-2 md:space-y-3">
               {towerData.length > 0 ? towerData.map((tower) => (
                 <div key={tower.name} className="space-y-1">
-                  <div className="flex justify-between text-[9px] font-bold uppercase tracking-tight">
-                    <span className="text-white/60">{tower.name}</span>
-                    <span className="text-white">{tower.percent}%</span>
+                  <div className="flex justify-between text-[8px] md:text-[9px] font-bold uppercase tracking-tight">
+                    <span className="text-white/60 truncate mr-1">{tower.name}</span>
+                    <span className="text-white shrink-0">{tower.percent}%</span>
                   </div>
-                  <div className="h-1.5 bg-white/10 rounded-full overflow-hidden border border-white/5">
+                  <div className="h-1 md:h-1.5 bg-white/10 rounded-full overflow-hidden border border-white/5">
                     <motion.div 
                       initial={{ width: 0 }}
                       animate={{ width: `${tower.percent}%` }}
@@ -155,7 +155,7 @@ export function TicketsMirror({ tickets, className = '', showLabel = true }: Tic
                   </div>
                 </div>
               )) : (
-                <p className="text-[10px] text-white/30 italic">Sem dados de torre</p>
+                <p className="text-[8px] md:text-[10px] text-white/30 italic">Sem dados</p>
               )}
             </div>
           </div>

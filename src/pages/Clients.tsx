@@ -70,7 +70,7 @@ export default function Clients() {
   };
 
   return (
-    <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-8 md:p-12 overflow-x-hidden relative">
+    <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-4 sm:p-8 md:p-12 overflow-x-hidden relative">
       {/* Background Decorative Elements */}
       <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
         <svg className="w-full h-full" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
@@ -79,12 +79,12 @@ export default function Clients() {
         </svg>
       </div>
 
-      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10">
-        <div className="flex items-center gap-6">
-          <BackButton />
+      <header className="mb-6 md:mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6 relative z-10">
+        <div className="flex items-center gap-4 md:gap-6">
+          <BackButton iconSize={6} className="p-3 md:p-4" />
           <div>
-            <h1 className="text-6xl font-light tracking-tight">Clientes</h1>
-            <p className="text-xl opacity-60 mt-2 font-light">Gerencie sua rede de contatos</p>
+            <h1 className="text-2xl md:text-6xl font-light tracking-tight">Clientes</h1>
+            <p className="text-xs md:text-xl opacity-60 mt-1 md:mt-2 font-light">Gerencie sua rede de contatos</p>
           </div>
         </div>
         
@@ -92,14 +92,14 @@ export default function Clients() {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           onClick={() => openModal()}
-          className="bg-white/10 hover:bg-white/20 text-white px-8 py-4 flex items-center gap-3 border border-white/20 backdrop-blur-md transition-all group"
+          className="bg-white/10 hover:bg-white/20 text-white px-6 md:px-8 py-3 md:py-4 flex items-center justify-center gap-3 border border-white/20 backdrop-blur-md transition-all group w-full md:w-auto"
         >
-          <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform" /> 
-          <span className="text-lg font-medium">Novo Cliente</span>
+          <Plus className="w-5 h-5 md:w-6 md:h-6 group-hover:rotate-90 transition-transform" /> 
+          <span className="text-base md:text-lg font-medium">Novo Cliente</span>
         </motion.button>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 relative z-10">
         {clients.map((client, index) => {
           const gradientClass = VIBRANT_GRADIENTS[index % VIBRANT_GRADIENTS.length];
           return (
@@ -108,7 +108,7 @@ export default function Clients() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.03 }}
-              className={`bg-gradient-to-br ${gradientClass} hover:brightness-110 transition-all p-6 aspect-square flex flex-col justify-between relative group overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95`}
+              className={`bg-gradient-to-br ${gradientClass} hover:brightness-110 transition-all p-4 md:p-6 aspect-square flex flex-col justify-between relative group overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95`}
             >
               {/* Glassmorphism Overlay */}
               <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
@@ -141,27 +141,27 @@ export default function Clients() {
               </div>
 
               <div className="mt-4 relative z-10">
-                <h3 className="text-2xl font-bold leading-tight mb-1 line-clamp-2 drop-shadow-lg">{client.name}</h3>
+                <h3 className="text-xl md:text-2xl font-bold leading-tight mb-1 line-clamp-2 drop-shadow-lg">{client.name}</h3>
                 {client.contactPerson && (
-                  <p className="text-sm opacity-80 flex items-center gap-1 drop-shadow-md">
+                  <p className="text-[10px] md:text-sm opacity-80 flex items-center gap-1 drop-shadow-md">
                     <User className="w-3 h-3" /> {client.contactPerson}
                   </p>
                 )}
               </div>
 
               <div className="mt-auto pt-4 space-y-2 border-t border-white/10 relative z-10">
-                <div className="flex items-center text-sm gap-2 drop-shadow-md">
-                  <Phone className="w-4 h-4 opacity-70" />
+                <div className="flex items-center text-[11px] md:text-sm gap-2 drop-shadow-md">
+                  <Phone className="w-3.5 md:w-4 h-3.5 md:h-4 opacity-70" />
                   <span className="font-medium">{client.phone}</span>
                 </div>
                 {client.email && (
-                  <div className="flex items-center text-sm gap-2 truncate drop-shadow-md">
-                    <Mail className="w-4 h-4 opacity-70" />
+                  <div className="flex items-center text-[11px] md:text-sm gap-2 truncate drop-shadow-md">
+                    <Mail className="w-3.5 md:w-4 h-3.5 md:h-4 opacity-70" />
                     <span className="truncate">{client.email}</span>
                   </div>
                 )}
-                <div className="flex items-start text-sm gap-2 mt-2 drop-shadow-md">
-                  <MapPin className="w-4 h-4 opacity-70 mt-0.5 shrink-0" />
+                <div className="flex items-start text-[11px] md:text-sm gap-2 mt-2 drop-shadow-md">
+                  <MapPin className="w-3.5 md:w-4 h-3.5 md:h-4 opacity-70 mt-0.5 shrink-0" />
                   <span className="line-clamp-2 opacity-80">{client.address}</span>
                 </div>
               </div>
