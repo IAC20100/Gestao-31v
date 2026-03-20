@@ -1,6 +1,7 @@
 import { useStore } from '../store';
 import { TicketStatus } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
+import { isSupabaseConfigured } from '../lib/supabase';
 import { 
   Users, FileText, Plus, Hammer, 
   DollarSign, TrendingUp, Package, Database, 
@@ -9,7 +10,8 @@ import {
   Columns, Clock, ClipboardCheck, AlertCircle, QrCode, AlertTriangle,
   BarChart3, Droplets, Zap, ShieldCheck, Megaphone,
   Box, UserCheck, Activity, Maximize2, CheckCircle2, Presentation, LogOut,
-  X, Download, FileUp, Database as DatabaseIcon, MessageSquare, Target
+  X, Download, FileUp, Database as DatabaseIcon, MessageSquare, Target,
+  Wifi, WifiOff
 } from 'lucide-react';
 import { KanbanMirror } from '../components/KanbanMirror';
 import { TicketsMirror } from '../components/TicketsMirror';
@@ -144,6 +146,12 @@ function WeatherTile() {
   return (
     <Link to="/weather" className="w-full h-full bg-gradient-to-br from-[#0078d7] to-[#005a9e] hover:brightness-110 transition-all p-4 flex flex-col justify-between  group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95">
       <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
+      <div className="absolute top-2 right-2 z-20">
+        <div className="flex items-center gap-1 bg-white/10 px-1.5 py-0.5 rounded-full border border-white/10 backdrop-blur-sm">
+          <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" />
+          <span className="text-[7px] font-black text-emerald-400 uppercase tracking-widest">Live</span>
+        </div>
+      </div>
       <div className="flex items-center gap-6 h-full relative z-10">
         <div className="relative group-hover:scale-110 transition-transform duration-500">
           <SunIcon className="w-16 h-16 text-yellow-300 drop-shadow-[0_0_15px_rgba(253,224,71,0.5)]" />
@@ -188,6 +196,7 @@ export default function Dashboard() {
   const totalDelinquency = payments.filter(p => p.status === 'OVERDUE').reduce((acc, curr) => acc + curr.amount, 0);
   const overdueMaintenances = useMemo(() => {
     return scheduledMaintenances.filter(m => {
+      if (!m.nextDate) return false;
       const isOverdue = new Date(m.nextDate) < new Date();
       return isOverdue;
     }).length;
@@ -196,6 +205,7 @@ export default function Dashboard() {
   // Check for overdue maintenances and notify
   useEffect(() => {
     const overdueItems = scheduledMaintenances.filter(m => {
+      if (!m.nextDate) return false;
       const isOverdue = new Date(m.nextDate) < new Date();
       return isOverdue;
     });
@@ -220,7 +230,7 @@ export default function Dashboard() {
   const saldo = totalReceitas - totalDespesas;
   const nextAppointment = useMemo(() => {
     const future = appointments
-      .filter(a => new Date(a.start) > new Date())
+      .filter(a => a.start && new Date(a.start) > new Date())
       .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
     return future[0] || appointments[0];
   }, [appointments]);
@@ -356,7 +366,13 @@ export default function Dashboard() {
                   <div className="flex items-center gap-2 text-white/80">
                     <Clock className="w-3 h-3" />
                     <p className="text-xs md:text-sm font-medium truncate">
-                      {new Date(nextAppointment.start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {new Date(nextAppointment.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      {nextAppointment.start ? (
+                        <>
+                          {new Date(nextAppointment.start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {new Date(nextAppointment.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                        </>
+                      ) : (
+                        'Horário não definido'
+                      )}
                     </p>
                   </div>
                 </div>
@@ -1047,6 +1063,19 @@ export default function Dashboard() {
                 <Database className="w-8 h-8" />
               </div>
             )}
+            <div className="flex items-center justify-end gap-2 mb-1">
+              {isSupabaseConfigured ? (
+                <div className="flex items-center gap-1.5 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  <Wifi className="w-3 h-3 text-emerald-400" />
+                  <span className="text-[9px] font-black text-emerald-400 uppercase tracking-wider">Conectado</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 bg-amber-500/20 px-2 py-0.5 rounded-full border border-amber-500/30">
+                  <WifiOff className="w-3 h-3 text-amber-400" />
+                  <span className="text-[9px] font-black text-amber-400 uppercase tracking-wider">Local (Offline)</span>
+                </div>
+              )}
+            </div>
             <p className="text-xl font-medium text-white">Administrador</p>
             <p className="text-sm text-white/60 font-medium">IA COMPANY TEC</p>
             <button 
