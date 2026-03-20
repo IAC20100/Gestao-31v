@@ -1,0 +1,1246 @@
+import React, { useState, useMemo, useRef } from 'react';
+import { useStore } from '../store';
+import { Cost } from '../types';
+import { 
+  DollarSign, TrendingUp, TrendingDown, Plus, Trash2, Wallet, 
+  FileSpreadsheet, BarChart3, Lightbulb, ArrowUpRight, ArrowDownRight, 
+  X, Calendar, Tag, User, ShieldCheck, FolderOpen, 
+  FileText, UserCheck 
+} from 'lucide-react';
+import { v4 as uuidv4 } from 'uuid';
+import { Modal } from '../components/Modal';
+import Papa from 'papaparse';
+import { 
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
+  ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell,
+  AreaChart, Area, ReferenceLine
+} from 'recharts';
+import { Link, useNavigate } from 'react-router-dom';
+import { BackButton } from '../components/BackButton';
+import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
+
+export default function Financial() {
+  const navigate = useNavigate();
+  const { receipts, costs, addCost, deleteCost, addReceipt, deleteReceipt, updateCost, updateReceipt, clients, payments } = useStore();
+  
+  const [isAddingCost, setIsAddingCost] = useState(false);
+  const [isAddingIncome, setIsAddingIncome] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<{ type: 'cost' | 'income', id: string } | null>(null);
+  const [description, setDescription] = useState('');
+  const [value, setValue] = useState(0);
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [category, setCategory] = useState('Material');
+  const [clientId, setClientId] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleEdit = (type: 'cost' | 'income', id: string) => {
+    const transaction = type === 'cost' 
+      ? costs.find(c => c.id === id) 
+      : receipts.find(r => r.id === id);
+    
+    if (transaction) {
+      setDescription(transaction.description);
+      setValue(transaction.value);
+      setDate(transaction.date);
+      if (type === 'cost') {
+        setCategory((transaction as any).category || 'Material');
+      } else {
+        setClientId((transaction as any).clientId || '');
+      }
+      setEditingTransaction({ type, id });
+    }
+  };
+
+  const handleUpdate = () => {
+    if (!editingTransaction) return;
+
+    if (editingTransaction.type === 'cost') {
+      updateCost(editingTransaction.id, {
+        description,
+        value,
+        date,
+        category
+      });
+      toast.success('Custo atualizado com sucesso!');
+    } else {
+      updateReceipt(editingTransaction.id, {
+        clientId,
+        description,
+        value,
+        date
+      });
+      toast.success('Receita atualizada com sucesso!');
+    }
+
+    setEditingTransaction(null);
+    resetForm();
+  };
+
+  const handleDelete = (type: 'income' | 'cost', id: string) => {
+    if (type === 'income') {
+      deleteReceipt(id);
+      toast.success('Receita excluída com sucesso!');
+    } else {
+      deleteCost(id);
+      toast.success('Custo excluída com sucesso!');
+    }
+  };
+
+  const resetForm = () => {
+    setDescription('');
+    setValue(0);
+    setDate(new Date().toISOString().split('T')[0]);
+    setCategory('Material');
+    setClientId('');
+  };
+
+  const totalIncome = receipts.reduce((sum, r) => sum + r.value, 0);
+  const totalCosts = costs.reduce((sum, c) => sum + c.value, 0);
+  const balance = totalIncome - totalCosts;
+  const profitMargin = totalIncome > 0 ? (balance / totalIncome) * 100 : 0;
+
+  const accountsReceivable = payments
+    .filter(p => p.status === 'PENDING' || p.status === 'OVERDUE')
+    .reduce((sum, p) => sum + p.amount, 0);
+
+  const categoryData = useMemo(() => {
+    const categories: { [key: string]: number } = {};
+    costs.forEach(c => {
+      categories[c.category] = (categories[c.category] || 0) + c.value;
+    });
+    return Object.entries(categories).map(([name, value]) => ({ name, value }));
+  }, [costs]);
+
+  const COLORS = ['#00f2ff', '#00ff88', '#7000ff', '#ff00d4', '#ff8800', '#ffff00'];
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-[#0a0a0a]/90 backdrop-blur-xl border border-white/10 p-4 rounded-2xl shadow-2xl">
+          <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => (
+            <div key={index} className="flex items-center gap-3 mb-1">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
+              <p className="text-sm font-bold text-white">
+                {entry.name}: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entry.value)}
+              </p>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        let importedCosts = 0;
+        let importedIncomes = 0;
+
+        results.data.forEach((row: any) => {
+          const dateKey = Object.keys(row).find(k => k.toLowerCase().includes('data') || k.toLowerCase().includes('date'));
+          const descKey = Object.keys(row).find(k => k.toLowerCase().includes('desc') || k.toLowerCase().includes('histórico') || k.toLowerCase().includes('historico'));
+          const valKey = Object.keys(row).find(k => k.toLowerCase().includes('valor') || k.toLowerCase().includes('value') || k.toLowerCase().includes('quantia'));
+          
+          if (!valKey) return;
+
+          const description = descKey ? row[descKey] : 'Importado via CSV';
+          let date = new Date().toISOString().split('T')[0];
+          
+          if (dateKey && row[dateKey]) {
+            const dStr = row[dateKey];
+            if (dStr.includes('/')) {
+              const parts = dStr.split('/');
+              if (parts.length === 3) {
+                date = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+              }
+            } else {
+              date = dStr;
+            }
+          }
+
+          const valStr = String(row[valKey]).replace(/[R$\s]/g, '').replace(/\./g, '').replace(',', '.');
+          const value = parseFloat(valStr);
+
+          if (isNaN(value) || value === 0) return;
+
+          if (value < 0) {
+            addCost({
+              description,
+              value: Math.abs(value),
+              date,
+              category: 'Importado'
+            });
+            importedCosts++;
+          } else {
+            const genericClientId = clients.length > 0 ? clients[0].id : '';
+            if (genericClientId) {
+              addReceipt({
+                clientId: genericClientId,
+                description,
+                value,
+                date
+              });
+              importedIncomes++;
+            }
+          }
+        });
+
+        if (fileInputRef.current) fileInputRef.current.value = '';
+        toast.success(`Importação concluída: ${importedIncomes} receitas e ${importedCosts} custos importados.`);
+      }
+    });
+  };
+
+  const handleAddCost = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!description || value <= 0) {
+      toast.error('Preencha descrição e valor válido.');
+      return;
+    }
+
+    addCost({
+      description,
+      value,
+      date,
+      category
+    });
+
+    resetForm();
+    setIsAddingCost(false);
+  };
+
+  const handleAddIncome = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!description || value <= 0 || !clientId) {
+      toast.error('Preencha cliente, descrição e valor válido.');
+      return;
+    }
+
+    addReceipt({
+      clientId,
+      description,
+      value,
+      date
+    });
+
+    resetForm();
+    setIsAddingIncome(false);
+  };
+
+  const transactions = [
+    ...receipts.map(r => ({ ...r, type: 'income' as const })),
+    ...costs.map(c => ({ ...c, type: 'expense' as const }))
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  const monthlyData = useMemo(() => {
+    const dataByMonth: Record<string, { name: string, receitas: number, despesas: number, saldo: number }> = {};
+    
+    transactions.forEach(t => {
+      const date = new Date(t.date);
+      const monthYear = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = date.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+      
+      if (!dataByMonth[monthYear]) {
+        dataByMonth[monthYear] = { name: monthName, receitas: 0, despesas: 0, saldo: 0 };
+      }
+      
+      if (t.type === 'income') {
+        dataByMonth[monthYear].receitas += t.value;
+      } else {
+        dataByMonth[monthYear].despesas += t.value;
+      }
+      dataByMonth[monthYear].saldo = dataByMonth[monthYear].receitas - dataByMonth[monthYear].despesas;
+    });
+
+    return Object.keys(dataByMonth)
+      .sort()
+      .map(key => dataByMonth[key]);
+  }, [transactions]);
+
+  const expensesByCategory = useMemo(() => {
+    const data: Record<string, number> = {};
+    costs.forEach(c => {
+      data[c.category] = (data[c.category] || 0) + c.value;
+    });
+    return Object.entries(data)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [costs]);
+
+  const topClients = useMemo(() => {
+    const clientRevenue: Record<string, number> = {};
+    receipts.forEach(r => {
+      const client = clients.find(c => c.id === r.clientId);
+      const name = client ? client.name : 'Desconhecido';
+      clientRevenue[name] = (clientRevenue[name] || 0) + r.value;
+    });
+    return Object.entries(clientRevenue)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value)
+      .slice(0, 5);
+  }, [receipts, clients]);
+
+  const insights = useMemo(() => {
+    if (monthlyData.length === 0) return null;
+
+    const bestMonth = [...monthlyData].sort((a, b) => b.saldo - a.saldo)[0];
+    const worstMonth = [...monthlyData].sort((a, b) => b.despesas - a.despesas)[0];
+    const topCategory = expensesByCategory.length > 0 ? expensesByCategory[0] : null;
+
+    let growth = 0;
+    if (monthlyData.length >= 2) {
+      const currentMonth = monthlyData[monthlyData.length - 1];
+      const previousMonth = monthlyData[monthlyData.length - 2];
+      if (previousMonth.receitas > 0) {
+        growth = ((currentMonth.receitas - previousMonth.receitas) / previousMonth.receitas) * 100;
+      }
+    }
+
+    return {
+      bestMonth,
+      worstMonth,
+      topCategory,
+      growth
+    };
+  }, [monthlyData, expensesByCategory]);
+
+  return (
+    <div 
+      className="min-h-screen bg-cover bg-center relative flex items-center justify-center p-4 md:p-8 font-sans -m-8"
+      style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80")' }}
+    >
+      {/* Heavy blur overlay for the background */}
+      <div className="absolute inset-0 bg-[#0a192f]/60 backdrop-blur-xl" />
+      
+      {/* Main Dashboard Container - Plastic Transparent Frosted Glass */}
+      <div className="relative z-10 w-full max-w-[1400px] bg-gradient-to-br from-[#1a2b4c]/90 to-[#0f172a]/90 backdrop-blur-2xl border border-white/20 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] p-6 md:p-8 flex flex-col gap-6 overflow-hidden">
+        
+        {/* Subtle inner glow */}
+        <div className="absolute inset-0 rounded-[2rem] shadow-[inset_0_0_30px_rgba(255,255,255,0.05)] pointer-events-none" />
+
+        <header className="mb-16 flex flex-col md:flex-row md:items-end justify-between gap-8 relative z-10 border-b border-white/10 pb-6">
+          <div className="flex items-center gap-8">
+            <BackButton className="!bg-white/5 !border-white/5 !rounded-3xl hover:!bg-white/10" />
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(34,211,238,0.8)]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-cyan-400/60">Live Financial Intelligence</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl font-black tracking-tighter text-white leading-none">Financeiro</h1>
+              <p className="text-sm text-white/40 mt-2 font-light max-w-md leading-relaxed">Análise preditiva e controle de fluxo de caixa em tempo real.</p>
+            </div>
+          </div>
+          
+          <div className="flex flex-wrap gap-4">
+            <input 
+              type="file" 
+              accept=".csv" 
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              className="hidden" 
+              id="csv-upload-financial"
+            />
+            <motion.label 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              htmlFor="csv-upload-financial"
+              className="bg-white/5 hover:bg-white/10 text-white/60 hover:text-white px-6 py-3 flex items-center gap-2 border border-white/10 backdrop-blur-2xl transition-all cursor-pointer rounded-2xl font-bold uppercase tracking-widest text-[10px]"
+            >
+              <FileSpreadsheet className="w-4 h-4" /> 
+              <span>Importar</span>
+            </motion.label>
+
+            <motion.button 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setDescription('');
+                setValue(0);
+                setClientId('');
+                setIsAddingIncome(true);
+              }}
+              className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 px-6 py-3 flex items-center gap-2 border border-cyan-500/30 transition-all rounded-2xl backdrop-blur-2xl font-black uppercase tracking-widest text-[10px] shadow-[0_0_30px_rgba(6,182,212,0.1)]"
+            >
+              <Plus className="w-4 h-4" /> 
+              <span>Receita</span>
+            </motion.button>
+
+            <motion.button 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                setDescription('');
+                setValue(0);
+                setIsAddingCost(true);
+              }}
+              className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-6 py-3 flex items-center gap-2 border border-rose-500/30 transition-all rounded-2xl backdrop-blur-2xl font-black uppercase tracking-widest text-[10px] shadow-[0_0_30px_rgba(244,63,94,0.1)]"
+            >
+              <Plus className="w-4 h-4" /> 
+              <span>Custo</span>
+            </motion.button>
+          </div>
+        </header>
+
+      {/* High-Fidelity Dashboard Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/20 transition-all duration-700" />
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Receitas Totais</h3>
+            <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl border border-cyan-500/20">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-4xl font-black text-white tracking-tighter mb-2">
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalIncome)}
+          </p>
+          <div className="flex items-center gap-2 text-cyan-400/60 text-[10px] font-bold uppercase tracking-widest">
+            <ArrowUpRight className="w-3 h-3" />
+            <span>+12.5% vs last month</span>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-rose-500/20 transition-all duration-700" />
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Despesas Totais</h3>
+            <div className="p-3 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20">
+              <TrendingDown className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-4xl font-black text-white tracking-tighter mb-2">
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalCosts)}
+          </p>
+          <div className="flex items-center gap-2 text-rose-400/60 text-[10px] font-bold uppercase tracking-widest">
+            <ArrowDownRight className="w-3 h-3" />
+            <span>-4.2% optimized</span>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rose-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-all duration-700" />
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Saldo Líquido</h3>
+            <div className={`p-3 rounded-2xl border ${balance >= 0 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
+              <Wallet className="w-5 h-5" />
+            </div>
+          </div>
+          <p className={`text-4xl font-black tracking-tighter mb-2 ${balance >= 0 ? 'text-white' : 'text-orange-400'}`}>
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(balance)}
+          </p>
+          <div className="flex items-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-widest">
+            <ShieldCheck className="w-3 h-3" />
+            <span>Healthy Cashflow</span>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/20 transition-all duration-700" />
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Margem Operacional</h3>
+            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="relative w-24 h-24">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="transparent"
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth="8"
+                />
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r="40"
+                  fill="transparent"
+                  stroke="url(#emeraldGradient)"
+                  strokeWidth="8"
+                  strokeDasharray="251.2"
+                  initial={{ strokeDashoffset: 251.2 }}
+                  animate={{ strokeDashoffset: 251.2 - (251.2 * profitMargin) / 100 }}
+                  transition={{ duration: 2, ease: "easeOut" }}
+                  strokeLinecap="round"
+                />
+                <defs>
+                  <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#34d399" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xl font-black text-white">{profitMargin.toFixed(0)}%</span>
+              </div>
+            </div>
+            <div>
+              <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-1">Status</p>
+              <p className="text-sm font-bold text-emerald-400 uppercase tracking-tighter">Excelente</p>
+            </div>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/20 transition-all duration-700" />
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Contas a Receber</h3>
+            <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl border border-cyan-500/20">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+          </div>
+          <p className="text-4xl font-black tracking-tighter mb-2 text-white">
+            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(accountsReceivable)}
+          </p>
+          <div className="flex items-center gap-2 text-cyan-400/60 text-[10px] font-bold uppercase tracking-widest">
+            <ArrowUpRight className="w-3 h-3" />
+            <span>Previsão de entrada</span>
+          </div>
+          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        </motion.div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 relative z-10">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Key Performance</h3>
+            <div className="px-3 py-1 bg-white/5 rounded-full text-[8px] font-black uppercase tracking-widest text-white/40 border border-white/10">Monitoring</div>
+          </div>
+          
+          <div className="space-y-6">
+            <div>
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Meta de Receita</span>
+                <span className="text-xs font-black text-white">85%</span>
+              </div>
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: '85%' }}
+                  className="h-full bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]"
+                />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Limite de Despesas</span>
+                <span className="text-xs font-black text-white">42%</span>
+              </div>
+              <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: '42%' }}
+                  className="h-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.5)]"
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group lg:col-span-2"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Real Time Activity</h3>
+            <div className="px-3 py-1 bg-cyan-500/10 rounded-full text-[8px] font-black uppercase tracking-widest text-cyan-400 border border-cyan-500/20">Tracking</div>
+          </div>
+          
+          <div className="flex items-center gap-12">
+            <div className="relative w-32 h-32 flex-shrink-0">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="45" fill="transparent" stroke="rgba(255,255,255,0.05)" strokeWidth="10" />
+                <motion.circle
+                  cx="50"
+                  cy="50"
+                  r="45"
+                  fill="transparent"
+                  stroke="#22d3ee"
+                  strokeWidth="10"
+                  strokeDasharray="282.7"
+                  initial={{ strokeDashoffset: 282.7 }}
+                  animate={{ strokeDashoffset: 282.7 - (282.7 * 72) / 100 }}
+                  transition={{ duration: 2.5, ease: "easeOut" }}
+                  strokeLinecap="round"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-black text-white">72%</span>
+                <span className="text-[8px] font-black text-white/20 uppercase tracking-widest">Efficiency</span>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-4 gap-4 flex-1">
+              {[1,2,3,4,5,6,7,8].map(i => (
+                <div key={i} className="aspect-square bg-white/5 rounded-2xl border border-white/5 flex items-center justify-center group/item hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all">
+                  <span className="text-[10px] font-black text-white/20 group-hover/item:text-cyan-400">0{i}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Advanced Charts Section */}
+      {monthlyData.length > 0 && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-16 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-8 bg-white/5 rounded-[3rem] p-10 border border-white/10 shadow-2xl backdrop-blur-3xl"
+          >
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="text-3xl font-black text-white tracking-tighter">Fluxo de Caixa</h2>
+                <p className="text-white/40 text-sm font-medium mt-1">Análise comparativa de entradas e saídas.</p>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.5)]" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Receitas</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/40">Despesas</span>
+                </div>
+              </div>
+            </div>
+            <div className="h-[400px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={monthlyData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="colorReceitas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="colorDespesas" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.2}/>
+                      <stop offset="95%" stopColor="#f43f5e" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900 }} 
+                    dy={20}
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900 }} 
+                    tickFormatter={(value) => `R$ ${value/1000}k`}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="receitas" 
+                    name="Receitas" 
+                    stroke="#22d3ee" 
+                    strokeWidth={4}
+                    fillOpacity={1} 
+                    fill="url(#colorReceitas)" 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="despesas" 
+                    name="Despesas" 
+                    stroke="#f43f5e" 
+                    strokeWidth={4}
+                    fillOpacity={1} 
+                    fill="url(#colorDespesas)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-4 bg-white/5 rounded-[3rem] p-10 border border-white/10 shadow-2xl backdrop-blur-3xl flex flex-col"
+          >
+            <h2 className="text-2xl font-black text-white tracking-tighter mb-2">Distribuição</h2>
+            <p className="text-white/40 text-sm font-medium mb-12">Alocação de recursos por categoria.</p>
+            
+            <div className="flex-1 flex flex-col items-center justify-center">
+              <div className="h-64 w-full relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expensesByCategory}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={70}
+                      outerRadius={100}
+                      paddingAngle={8}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {expensesByCategory.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white/20">Total</span>
+                  <span className="text-2xl font-black text-white tracking-tighter">
+                    {new Intl.NumberFormat('pt-BR', { notation: 'compact' }).format(totalCosts)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="w-full space-y-4 mt-12">
+                {expensesByCategory.slice(0, 4).map((cat, index) => (
+                  <div key={cat.name} className="flex items-center justify-between group cursor-default">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2 h-2 rounded-full shadow-[0_0_8px_currentColor]" style={{ color: COLORS[index % COLORS.length], backgroundColor: COLORS[index % COLORS.length] }} />
+                      <span className="text-xs text-white/40 font-black uppercase tracking-widest group-hover:text-white transition-colors">{cat.name}</span>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="w-24 bg-white/5 h-1 rounded-full overflow-hidden">
+                        <div className="h-full transition-all duration-1000" style={{ width: `${(cat.value / totalCosts) * 100}%`, backgroundColor: COLORS[index % COLORS.length] }} />
+                      </div>
+                      <span className="text-xs font-black text-white w-10 text-right">
+                        {((cat.value / totalCosts) * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-6 bg-white/5 rounded-[3rem] p-10 border border-white/10 shadow-2xl backdrop-blur-3xl"
+          >
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="text-2xl font-black text-white tracking-tighter">Top Clientes</h2>
+                <p className="text-white/40 text-sm font-medium mt-1">Maiores fontes de receita por parceiro.</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-2xl">
+                <User className="w-5 h-5 text-white/40" />
+              </div>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={topClients} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="rgba(255,255,255,0.03)" />
+                  <XAxis type="number" hide />
+                  <YAxis 
+                    dataKey="name" 
+                    type="category" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 900 }} 
+                    width={100} 
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar 
+                    dataKey="value" 
+                    name="Receita" 
+                    fill="#22d3ee" 
+                    radius={[0, 10, 10, 0]} 
+                    barSize={24}
+                  >
+                    {topClients.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fillOpacity={1 - (index * 0.15)} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="lg:col-span-6 bg-white/5 rounded-[3rem] p-10 border border-white/10 shadow-2xl backdrop-blur-3xl"
+          >
+            <div className="flex items-center justify-between mb-12">
+              <div>
+                <h2 className="text-2xl font-black text-white tracking-tighter">Performance de Saldo</h2>
+                <p className="text-white/40 text-sm font-medium mt-1">Tendência de acumulação de capital.</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-2xl">
+                <TrendingUp className="w-5 h-5 text-white/40" />
+              </div>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={monthlyData} margin={{ top: 0, right: 20, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900 }} 
+                  />
+                  <YAxis 
+                    axisLine={false} 
+                    tickLine={false} 
+                    tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 900 }} 
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line 
+                    type="stepAfter" 
+                    dataKey="saldo" 
+                    name="Saldo" 
+                    stroke="#a855f7" 
+                    strokeWidth={4} 
+                    dot={{ r: 4, fill: '#a855f7', strokeWidth: 0 }} 
+                    activeDot={{ r: 8, strokeWidth: 0 }} 
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </motion.div>
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="lg:col-span-4 bg-white/5 rounded-[3rem] p-10 border border-white/10 shadow-2xl backdrop-blur-3xl flex flex-col"
+          >
+            <div className="mb-12">
+              <h2 className="text-3xl font-black text-white tracking-tighter">Despesas</h2>
+              <p className="text-white/40 text-sm font-medium mt-1">Distribuição por categoria.</p>
+            </div>
+            
+            <div className="flex-1 min-h-[300px] relative">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={categoryData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={80}
+                    outerRadius={120}
+                    paddingAngle={8}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {categoryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] font-black text-white/20 uppercase tracking-[0.2em]">Total</span>
+                <span className="text-2xl font-black text-white">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(totalCosts)}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mt-8">
+              {categoryData.map((entry, index) => (
+                <div key={entry.name} className="flex items-center gap-3">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{entry.name}</span>
+                    <span className="text-xs font-bold text-white">
+                      {((entry.value / totalCosts) * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Transactions List - High Fidelity */}
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-12">
+          <div>
+            <h2 className="text-4xl font-black text-white tracking-tighter">Transações Recentes</h2>
+            <p className="text-white/40 text-sm font-medium mt-1">Detalhamento granular de cada movimentação.</p>
+          </div>
+          <div className="flex gap-4">
+             <div className="px-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white/40">
+               Total: {transactions.length}
+             </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {transactions.map((t, index) => (
+            <motion.div 
+              key={t.id} 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: index * 0.02 }}
+              className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 flex flex-col relative group hover:bg-white/10 transition-all duration-500 shadow-xl backdrop-blur-3xl overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                {t.type === 'income' ? <ArrowUpRight className="w-24 h-24" /> : <ArrowDownRight className="w-24 h-24" />}
+              </div>
+              
+              <div className="flex justify-between items-start mb-8 relative z-10">
+                <div className={`p-4 rounded-2xl border ${t.type === 'income' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                  {t.type === 'income' ? <ArrowUpRight className="w-6 h-6" /> : <ArrowDownRight className="w-6 h-6" />}
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={() => handleEdit(t.type === 'income' ? 'income' : 'cost', t.id)}
+                    className="p-3 text-white/20 hover:text-cyan-400 hover:bg-cyan-500/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    title="Editar"
+                  >
+                    <Plus className="w-5 h-5 rotate-45" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(t.type === 'income' ? 'income' : 'cost', t.id)}
+                    className="p-3 text-white/20 hover:text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    title="Excluir"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              
+              <h3 className="text-xl font-black text-white mb-2 line-clamp-2 relative z-10 group-hover:text-cyan-400 transition-colors">{t.description}</h3>
+              
+              <p className={`text-3xl font-black mb-8 relative z-10 ${t.type === 'income' ? 'text-white' : 'text-rose-400'}`}>
+                {t.type === 'income' ? '+' : '-'} {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(t.value)}
+              </p>
+              
+              <div className="mt-auto flex justify-between items-center text-[10px] font-black uppercase tracking-widest relative z-10">
+                <div className="flex items-center gap-2 text-white/30">
+                  <Calendar className="w-3 h-3" />
+                  <span>{new Date(t.date).toLocaleDateString('pt-BR')}</span>
+                </div>
+                <span className={`px-4 py-1.5 rounded-full border ${t.type === 'income' ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+                  {t.type === 'income' ? 'Receita' : (t as Cost).category}
+                </span>
+              </div>
+              <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent ${t.type === 'income' ? 'via-cyan-500/30' : 'via-rose-500/30'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
+            </motion.div>
+          ))}
+          
+          {transactions.length === 0 && (
+            <div className="col-span-full py-32 text-center bg-white/5 rounded-[3rem] border border-dashed border-white/10 backdrop-blur-3xl">
+              <div className="inline-flex items-center justify-center w-24 h-24 bg-white/5 rounded-full mb-8">
+                <DollarSign className="w-12 h-12 text-white/10" />
+              </div>
+              <h3 className="text-3xl font-black text-white/20 tracking-tighter">Nenhuma transação registrada</h3>
+              <p className="text-white/10 mt-4 font-bold uppercase tracking-widest text-xs">Aguardando dados para processamento...</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Edit Transaction Modal */}
+      <Modal 
+        isOpen={!!editingTransaction} 
+        onClose={() => setEditingTransaction(null)} 
+        title={`Editar ${editingTransaction?.type === 'cost' ? 'Custo' : 'Receita'}`}
+        maxWidth="sm"
+        glass={true}
+      >
+        <form onSubmit={(e) => { e.preventDefault(); handleUpdate(); }} className="space-y-6 p-2">
+          {editingTransaction?.type === 'income' && (
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Cliente *</label>
+              <select 
+                value={clientId}
+                onChange={(e) => setClientId(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+                required
+              >
+                <option value="" className="bg-[#004a7c]">Selecione um cliente</option>
+                {clients.map(c => (
+                  <option key={c.id} value={c.id} className="bg-[#004a7c]">{c.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Descrição *</label>
+            <input 
+              type="text" 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white placeholder:text-white/30"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor (R$) *</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+              <input 
+                type="number" 
+                value={value || ''}
+                onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
+                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Data *</label>
+            <input 
+              type="date" 
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white [color-scheme:dark]"
+              required
+            />
+          </div>
+
+          {editingTransaction?.type === 'cost' && (
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Categoria</label>
+              <select 
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+              >
+                <option value="Material" className="bg-[#004a7c]">Material</option>
+                <option value="Combustível" className="bg-[#004a7c]">Combustível</option>
+                <option value="Alimentação" className="bg-[#004a7c]">Alimentação</option>
+                <option value="Ferramentas" className="bg-[#004a7c]">Ferramentas</option>
+                <option value="Outros" className="bg-[#004a7c]">Outros</option>
+              </select>
+            </div>
+          )}
+
+          <div className="pt-6 flex justify-end gap-3">
+            <button 
+              type="button"
+              onClick={() => setEditingTransaction(null)}
+              className="px-6 py-3 text-white/60 hover:text-white transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              className="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 px-10 py-3 rounded-xl font-bold border border-cyan-500/30 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+            >
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </Modal>
+      <Modal 
+        isOpen={isAddingCost} 
+        onClose={() => setIsAddingCost(false)} 
+        title="Adicionar Custo"
+        maxWidth="sm"
+        glass={true}
+      >
+        <form onSubmit={handleAddCost} className="space-y-6 p-2">
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Descrição *</label>
+            <input 
+              type="text" 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white placeholder:text-white/30"
+              placeholder="Ex: Compra de materiais..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor (R$) *</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+              <input 
+                type="number" 
+                value={value || ''}
+                onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
+                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Data *</label>
+            <input 
+              type="date" 
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white [color-scheme:dark]"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Categoria</label>
+            <select 
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+            >
+              <option value="Material" className="bg-[#004a7c]">Material</option>
+              <option value="Combustível" className="bg-[#004a7c]">Combustível</option>
+              <option value="Alimentação" className="bg-[#004a7c]">Alimentação</option>
+              <option value="Ferramentas" className="bg-[#004a7c]">Ferramentas</option>
+              <option value="Outros" className="bg-[#004a7c]">Outros</option>
+            </select>
+          </div>
+
+          <div className="pt-6 flex justify-end gap-3">
+            <button 
+              type="button"
+              onClick={() => setIsAddingCost(false)}
+              className="px-6 py-3 text-white/60 hover:text-white transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-10 py-3 rounded-xl font-bold border border-red-500/30 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+            >
+              SALVAR CUSTO
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Income Modal */}
+      <Modal 
+        isOpen={isAddingIncome} 
+        onClose={() => setIsAddingIncome(false)} 
+        title="Adicionar Receita"
+        maxWidth="sm"
+        glass={true}
+      >
+        <form onSubmit={handleAddIncome} className="space-y-6 p-2">
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Cliente *</label>
+            <select 
+              value={clientId}
+              onChange={(e) => setClientId(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+              required
+            >
+              <option value="" className="bg-[#004a7c]">Selecione um cliente...</option>
+              {clients.map(c => (
+                <option key={c.id} value={c.id} className="bg-[#004a7c]">{c.name}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Descrição *</label>
+            <input 
+              type="text" 
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white placeholder:text-white/30"
+              placeholder="Ex: Pagamento de serviço avulso..."
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor (R$) *</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+              <input 
+                type="number" 
+                value={value || ''}
+                onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
+                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                min="0.01"
+                step="0.01"
+                required
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Data *</label>
+            <input 
+              type="date" 
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white [color-scheme:dark]"
+              required
+            />
+          </div>
+
+          <div className="pt-6 flex justify-end gap-3">
+            <button 
+              type="button"
+              onClick={() => setIsAddingIncome(false)}
+              className="px-6 py-3 text-white/60 hover:text-white transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-10 py-3 rounded-xl font-bold border border-emerald-500/30 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+            >
+              SALVAR RECEITA
+            </button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+    </div>
+  );
+}
