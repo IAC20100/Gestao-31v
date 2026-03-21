@@ -207,6 +207,12 @@ export default function Financial() {
     return Object.entries(categories).map(([name, value]) => ({ name, value }));
   }, [costs]);
 
+  const latestReceipts = useMemo(() => {
+    return [...receipts]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 8);
+  }, [receipts]);
+
   const COLORS = ['#00f2ff', '#00ff88', '#7000ff', '#ff00d4', '#ff8800', '#ffff00'];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -782,11 +788,22 @@ export default function Financial() {
             </div>
             
             <div className="grid grid-cols-4 gap-4 flex-1">
-              {[1,2,3,4,5,6,7,8].map(i => (
-                <div key={i} className="aspect-square bg-white/5 rounded-2xl border border-white/5 flex items-center justify-center group/item hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all">
-                  <span className="text-[10px] font-black text-white/20 group-hover/item:text-cyan-400">0{i}</span>
-                </div>
-              ))}
+              {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
+                const receipt = latestReceipts[i];
+                return (
+                  <div key={i} className="aspect-square bg-white/5 rounded-2xl border border-white/5 flex flex-col items-center justify-center group/item hover:bg-cyan-500/10 hover:border-cyan-500/20 transition-all p-2 text-center overflow-hidden">
+                    {receipt ? (
+                      <>
+                        <span className="text-[8px] font-black text-white/40 truncate w-full mb-1">{receipt.description}</span>
+                        <span className="text-[10px] font-black text-cyan-400">R$ {receipt.value.toLocaleString('pt-BR')}</span>
+                        <span className="text-[6px] font-medium text-white/20 mt-1">{new Date(receipt.date).toLocaleDateString('pt-BR')}</span>
+                      </>
+                    ) : (
+                      <span className="text-[10px] font-black text-white/10 group-hover/item:text-cyan-400">0{i + 1}</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
         </motion.div>
