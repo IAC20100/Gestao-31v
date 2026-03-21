@@ -38,6 +38,7 @@ export const useStore = create<AppState>()(
       criticalEvents: [],
       energyData: [],
       savingsGoals: [],
+      feedbacks: [],
       assemblies: [],
       companyLogo: '',
       companySignature: '',
@@ -2029,6 +2030,28 @@ export const useStore = create<AppState>()(
             toast.success('Documento excluído com sucesso!');
           }
         }
+      },
+
+      addFeedback: async (feedback) => {
+        const id = uuidv4();
+        const date = new Date().toISOString();
+        const newFeedback = { ...feedback, id, date };
+        set((state) => ({ feedbacks: [...state.feedbacks, newFeedback] }));
+        
+        try {
+          const { error } = await supabase.from('feedbacks').insert([{
+            id,
+            client_id: feedback.clientId,
+            location_id: feedback.locationId,
+            rating: feedback.rating,
+            comment: feedback.comment,
+            user_name: feedback.userName,
+            date
+          }]);
+          if (error) {
+            console.error('Erro Supabase addFeedback:', error);
+          }
+        } catch (e) { console.error(e); }
       },
 
       restoreData: async (data) => {

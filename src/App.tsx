@@ -25,6 +25,8 @@ import IntelligentChecklist from './pages/IntelligentChecklist';
 import QRManager from './pages/QRManager';
 import QRReports from './pages/QRReports';
 import PublicTicketForm from './pages/PublicTicketForm';
+import PublicChat from './pages/PublicChat';
+import PublicFeedback from './pages/PublicFeedback';
 import SuppliesManager from './pages/SuppliesManager';
 import AccountabilityDashboard from './pages/AccountabilityDashboard';
 import ConsumptionDashboard from './pages/ConsumptionDashboard';
@@ -279,6 +281,8 @@ export default function App() {
           <Route path="/qr-codes" element={<QRManager />} />
           <Route path="/qr-reports" element={<QRReports />} />
           <Route path="/report" element={<PublicTicketForm />} />
+          <Route path="/chat" element={<PublicChat />} />
+          <Route path="/feedback" element={<PublicFeedback />} />
           <Route path="/supplies" element={<SuppliesManager />} />
           <Route path="/accountability" element={<AccountabilityDashboard />} />
           <Route path="/consumption" element={<ConsumptionDashboard />} />

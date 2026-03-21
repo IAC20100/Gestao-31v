@@ -331,6 +331,16 @@ export type DocumentTemplate = {
   fileUrl?: string;
 };
 
+export type Feedback = {
+  id: string;
+  clientId: string;
+  locationId?: string;
+  rating: number;
+  comment: string;
+  userName?: string;
+  date: string;
+};
+
 export interface AppState {
   clients: Client[];
   checklistItems: ChecklistItem[];
@@ -356,6 +366,7 @@ export interface AppState {
   criticalEvents: CriticalEvent[];
   energyData: EnergyRecord[];
   savingsGoals: SavingsGoal[];
+  feedbacks: Feedback[];
   companyLogo: string | null;
   companySignature: string | null;
   companyData: CompanyData | null;
@@ -473,5 +484,6 @@ export interface AppState {
   updateDocumentTemplate: (id: string, template: Partial<DocumentTemplate>) => Promise<void>;
   deleteDocumentTemplate: (id: string) => Promise<void>;
 
+  addFeedback: (feedback: Omit<Feedback, 'id' | 'date'>) => void;
   restoreData: (data: Partial<AppState>) => Promise<void>;
 }

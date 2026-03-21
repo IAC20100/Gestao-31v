@@ -27,6 +27,7 @@ export default function QRManager() {
   const { clients, updateClient, companyLogo, companyData, tickets } = useStore();
   const [selectedClientId, setSelectedClientId] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [qrType, setQrType] = useState<'chat' | 'feedback'>('chat');
   const [newLocationName, setNewLocationName] = useState('');
   const [qrSize, setQrSize] = useState(200);
   const [printingLocation, setPrintingLocation] = useState<{ id: string, name: string } | null>(null);
@@ -133,7 +134,8 @@ export default function QRManager() {
 
   const getPublicUrl = (clientId: string, locationId: string) => {
     const baseUrl = window.location.origin + window.location.pathname;
-    return `${baseUrl}#/report?client=${clientId}&location=${locationId}`;
+    const path = qrType === 'chat' ? 'chat' : 'feedback';
+    return `${baseUrl}#/${path}?client=${clientId}&location=${locationId}`;
   };
 
   return (
@@ -160,6 +162,26 @@ export default function QRManager() {
         </div>
 
         <div className="flex flex-wrap items-center gap-4">
+          {/* QR Type Toggle */}
+          <div className="bg-white/5 backdrop-blur-xl p-1 rounded-2xl border border-white/10 flex items-center">
+            <button
+              onClick={() => setQrType('chat')}
+              className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${
+                qrType === 'chat' ? 'bg-cyan-500 text-black shadow-lg shadow-cyan-500/20' : 'text-white/40 hover:text-white/60'
+              }`}
+            >
+              Chat Suporte
+            </button>
+            <button
+              onClick={() => setQrType('feedback')}
+              className={`px-6 py-2.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all ${
+                qrType === 'feedback' ? 'bg-pink-500 text-white shadow-lg shadow-pink-500/20' : 'text-white/40 hover:text-white/60'
+              }`}
+            >
+              Caixa Opinião
+            </button>
+          </div>
+
           <button
             onClick={() => navigate('/qr-reports')}
             className="bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-2xl font-bold transition-all flex items-center gap-2 border border-white/10 backdrop-blur-xl group active:scale-95"
@@ -396,7 +418,7 @@ export default function QRManager() {
                       className="mt-3 w-full py-3 rounded-2xl bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-all font-black uppercase tracking-widest text-[9px] flex items-center justify-center gap-2 border border-cyan-500/20"
                     >
                       <ExternalLink className="w-3 h-3" />
-                      Testar Acesso
+                      {qrType === 'chat' ? 'Testar Chat de Suporte' : 'Testar Caixa de Opinião'}
                     </a>
                   </div>
                 </div>
@@ -454,15 +476,21 @@ export default function QRManager() {
       <div className="fixed -left-[9999px] top-0 pointer-events-none">
         <div ref={printRef} style={{ backgroundColor: '#ffffff', color: '#18181b' }} className="w-[148mm] h-[210mm] relative flex flex-col items-center p-10 font-sans overflow-hidden">
           {/* Header Text */}
-          <div className="w-full text-center mb-6 relative z-10">
-            <div className="flex items-center justify-center gap-3 mb-3">
-              <div style={{ backgroundColor: '#18181b' }} className="w-2 h-2 rounded-full" />
-              <span style={{ color: '#a1a1aa' }} className="text-[10px] font-black uppercase tracking-[0.4em]">Suporte Técnico</span>
-            </div>
-            <h1 className="text-4xl font-black tracking-tighter leading-none uppercase italic">
-              Relate um <span style={{ color: '#a1a1aa' }}>Problema</span>
-            </h1>
-          </div>
+              <div className="w-full text-center mb-6 relative z-10">
+                <div className="flex items-center justify-center gap-3 mb-3">
+                  <div style={{ backgroundColor: qrType === 'chat' ? '#18181b' : '#ec4899' }} className="w-2 h-2 rounded-full" />
+                  <span style={{ color: '#a1a1aa' }} className="text-[10px] font-black uppercase tracking-[0.4em]">
+                    {qrType === 'chat' ? 'Suporte Técnico' : 'Sua Opinião'}
+                  </span>
+                </div>
+                <h1 className="text-4xl font-black tracking-tighter leading-none uppercase italic">
+                  {qrType === 'chat' ? (
+                    <>Relate um <span style={{ color: '#a1a1aa' }}>Problema</span></>
+                  ) : (
+                    <>Dê sua <span style={{ color: '#ec4899' }}>Opinião</span></>
+                  )}
+                </h1>
+              </div>
 
           {/* The "Acrylic" Plate Container */}
           <div style={{ backgroundColor: '#f4f4f5', borderColor: '#e4e4e7' }} className="w-full flex-1 rounded-[4rem] border p-6 flex flex-col items-center relative shadow-inner">
@@ -558,7 +586,9 @@ export default function QRManager() {
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] pointer-events-none" />
                     
                     <div className="relative z-10">
-                      <span style={{ color: 'rgba(255, 255, 255, 0.2)' }} className="text-[6px] font-black uppercase tracking-widest block mb-1">Localização</span>
+                      <span style={{ color: 'rgba(255, 255, 255, 0.2)' }} className="text-[6px] font-black uppercase tracking-widest block mb-1">
+                        {qrType === 'chat' ? 'Localização' : 'Sua Opinião'}
+                      </span>
                       <h3 style={{ color: '#ffffff' }} className="text-lg font-black uppercase tracking-tight leading-none truncate italic mb-3">
                         {loc.name}
                       </h3>
