@@ -389,24 +389,17 @@ export default function Dashboard() {
         <div className="w-full h-full bg-slate-900/40 backdrop-blur-2xl p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 transition-all">
           <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
             <div 
-              className="flex-1 flex flex-col justify-center p-4 cursor-pointer hover:bg-white/5 rounded-2xl transition-all group/fin border border-white/5" 
+              className="flex-1 flex flex-col justify-center items-center p-4 cursor-pointer hover:bg-white/5 rounded-2xl transition-all group/fin border border-white/5" 
               onClick={() => navigate('/financial')}
             >
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-                <CostsMirror 
-                  costs={costs} 
-                  className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full" 
-                  hideFooter={true}
-                />
-                <div className="flex flex-col items-start md:items-end justify-center md:pr-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
-                  <p className="text-[10px] font-black uppercase text-white/40 mb-1 tracking-widest">Saldo Atual</p>
-                  <span className="text-3xl font-black text-white group-hover/fin:text-emerald-400 transition-colors">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(saldo)}
-                  </span>
-                  <div className="mt-4 flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Fluxo Ativo</span>
-                  </div>
+              <div className="flex flex-col items-center justify-center text-center">
+                <p className="text-[10px] font-black uppercase text-white/40 mb-2 tracking-[0.3em]">Saldo Atual</p>
+                <span className="text-5xl font-black text-white group-hover/fin:text-emerald-400 transition-all duration-500 scale-100 group-hover/fin:scale-110">
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(saldo)}
+                </span>
+                <div className="mt-6 flex items-center gap-3 bg-emerald-500/10 px-4 py-2 rounded-2xl border border-emerald-500/20 shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+                  <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.5)]" />
+                  <span className="text-xs font-black text-emerald-400 uppercase tracking-[0.2em]">Fluxo de Caixa Ativo</span>
                 </div>
               </div>
             </div>
