@@ -188,6 +188,11 @@
     page-break-before: always;
     break-before: page;
   }
+
+  .page-break-after-always {
+    page-break-after: always;
+    break-after: page;
+  }
 }
 
 @keyframes scan {

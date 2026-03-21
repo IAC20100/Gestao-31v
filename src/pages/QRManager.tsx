@@ -450,128 +450,126 @@ export default function QRManager() {
         </form>
       </Modal>
 
-      {/* Modern QR Code Print Template (Hidden) */}
-      <div className="hidden">
-        <div ref={printRef} className="w-[148mm] h-[210mm] bg-white relative flex flex-col p-12 font-sans overflow-hidden text-zinc-900">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-zinc-50 rounded-bl-full -mr-16 -mt-16 border border-zinc-100" />
-          <div className="flex justify-between items-start mb-16 relative z-10">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 rounded-full bg-blue-600" />
-                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Suporte Técnico</span>
-              </div>
-              <h1 className="text-4xl font-black tracking-tighter leading-none uppercase">
-                {companyData?.name || 'FLORES'}
-              </h1>
-              <p className="text-[10px] font-bold text-zinc-400 mt-2 uppercase tracking-widest">Manutenção Predial</p>
+      {/* Modern QR Code Print Template (Off-screen for rendering) - Acrylic Style */}
+      <div className="fixed -left-[9999px] top-0 pointer-events-none">
+        <div ref={printRef} style={{ backgroundColor: '#ffffff', color: '#18181b' }} className="w-[148mm] h-[210mm] relative flex flex-col items-center p-10 font-sans overflow-hidden">
+          {/* Header Text */}
+          <div className="w-full text-center mb-6 relative z-10">
+            <div className="flex items-center justify-center gap-3 mb-3">
+              <div style={{ backgroundColor: '#18181b' }} className="w-2 h-2 rounded-full" />
+              <span style={{ color: '#a1a1aa' }} className="text-[10px] font-black uppercase tracking-[0.4em]">Suporte Técnico</span>
             </div>
-            <div className="w-20 h-20 bg-zinc-50 rounded-[2rem] border border-zinc-100 flex items-center justify-center p-4 shadow-sm">
-              {companyLogo ? (
-                <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
-              ) : (
-                <Building2 className="w-10 h-10 text-zinc-200" />
-              )}
-            </div>
+            <h1 className="text-4xl font-black tracking-tighter leading-none uppercase italic">
+              Relate um <span style={{ color: '#a1a1aa' }}>Problema</span>
+            </h1>
           </div>
-          <div className="flex-1 flex flex-col justify-center items-center text-center relative z-10">
-            <div className="mb-10">
-              <h2 className="text-6xl font-black tracking-tighter leading-[0.85] mb-6 italic">
-                RELATE UM<br />PROBLEMA
-              </h2>
-              <div className="h-1 w-20 bg-blue-600 mx-auto rounded-full mb-6" />
-              <p className="text-zinc-500 text-sm font-medium max-w-[240px] leading-relaxed mx-auto">
-                Escaneie o código abaixo para abrir um chamado de manutenção para este local.
-              </p>
-            </div>
-            <div className="relative">
-              <div className="absolute -top-4 -left-4 w-12 h-12 border-t-4 border-l-4 border-zinc-100 rounded-tl-3xl" />
-              <div className="absolute -top-4 -right-4 w-12 h-12 border-t-4 border-r-4 border-zinc-100 rounded-tr-3xl" />
-              <div className="absolute -bottom-4 -left-4 w-12 h-12 border-b-4 border-l-4 border-zinc-100 rounded-bl-3xl" />
-              <div className="absolute -bottom-4 -right-4 w-12 h-12 border-b-4 border-r-4 border-zinc-100 rounded-br-3xl" />
-              <div className="bg-white p-8 rounded-[3rem] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.08)] border border-zinc-50">
+
+          {/* The "Acrylic" Plate Container */}
+          <div style={{ backgroundColor: '#f4f4f5', borderColor: '#e4e4e7' }} className="w-full flex-1 rounded-[4rem] border p-6 flex flex-col items-center relative shadow-inner">
+            
+            {/* QR Code Section (Middle) */}
+            <div className="flex-1 flex flex-col items-center justify-center w-full">
+              <div style={{ backgroundColor: '#ffffff' }} className="p-10 rounded-[3rem] shadow-2xl border border-zinc-100">
                 {printingLocation && (
-                  <QRCodeCanvas 
+                  <QRCodeSVG 
                     value={getPublicUrl(selectedClientId, printingLocation.id)}
-                    size={320}
+                    size={260}
                     level="H"
                     includeMargin={false}
                   />
                 )}
               </div>
+              <div className="mt-6 text-center">
+                <span style={{ color: '#71717a' }} className="text-[10px] font-black uppercase tracking-[0.4em]">Escaneie o Código</span>
+              </div>
             </div>
-          </div>
-          <div className="mt-16 pt-10 border-t border-zinc-100 flex justify-between items-end relative z-10">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black text-zinc-300 uppercase tracking-[0.2em] mb-2">Identificação do Local</span>
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-zinc-900 flex items-center justify-center">
-                  <MapPin className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-black uppercase tracking-tight leading-none">{printingLocation?.name || 'Local'}</h3>
-                  <p className="text-[10px] font-bold text-zinc-400 mt-1 uppercase">{selectedClient?.name}</p>
+
+            {/* Black Info Box (Bottom) */}
+            <div style={{ backgroundColor: '#18181b' }} className="w-full h-[65mm] rounded-[3.5rem] p-10 flex flex-col justify-center shadow-2xl relative overflow-hidden">
+              {/* Subtle texture for the black box */}
+              <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.05] mix-blend-overlay" />
+              
+              <div className="relative z-10">
+                <span style={{ color: 'rgba(255, 255, 255, 0.3)' }} className="text-[10px] font-black uppercase tracking-[0.2em] mb-2 block">Localização</span>
+                <h2 style={{ color: '#ffffff' }} className="text-4xl font-black uppercase tracking-tight italic leading-tight mb-4">
+                  {printingLocation?.name || 'Local'}
+                </h2>
+                
+                <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} className="h-px w-full mb-4" />
+                
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col">
+                    <span style={{ color: 'rgba(255, 255, 255, 0.3)' }} className="text-[9px] font-black uppercase tracking-[0.2em] mb-1">Condomínio</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.7)' }} className="text-sm font-bold uppercase tracking-wide">
+                      {selectedClient?.name}
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end">
+                    <span style={{ color: 'rgba(255, 255, 255, 0.2)' }} className="text-[8px] font-mono uppercase">ID: {printingLocation?.id.slice(0,8)}</span>
+                    <div className="flex gap-1.5 mt-2">
+                      {[1,2,3,4].map(i => <div key={i} style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }} className="w-1.5 h-1.5 rounded-full" />)}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="flex flex-col items-end">
-              <div className="flex gap-1.5 mb-3">
-                {[1,2,3,4].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-zinc-100" />)}
-              </div>
-              <span className="text-[9px] font-mono text-zinc-300 tracking-tighter uppercase">ID: {printingLocation?.id.slice(0,8)}</span>
-            </div>
           </div>
-          <div className="absolute bottom-0 left-0 w-full h-2 flex">
-            <div className="flex-1 bg-zinc-100" />
-            <div className="flex-1 bg-blue-600" />
-            <div className="flex-1 bg-zinc-900" />
+
+          {/* Footer */}
+          <div className="w-full mt-8 flex items-center justify-between px-6 relative z-10">
+            <div className="flex items-center gap-4">
+              {companyLogo && <img src={companyLogo} alt="Logo" className="h-10 object-contain opacity-40 grayscale" referrerPolicy="no-referrer" />}
+              <div className="flex flex-col">
+                <span style={{ color: '#a1a1aa' }} className="text-[11px] font-black uppercase tracking-[0.2em]">
+                  {companyData?.name || 'FLORES'}
+                </span>
+                <span style={{ color: '#d4d4d8' }} className="text-[8px] font-bold uppercase tracking-widest">Gestão de Manutenção</span>
+              </div>
+            </div>
+            <div className="text-right">
+              <span style={{ color: '#d4d4d8' }} className="text-[9px] font-black uppercase tracking-[0.3em]">Powered by QR Studio</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bulk Print Template */}
-      <div className="hidden">
-        <div ref={bulkPrintRef} className="w-[210mm] bg-white text-zinc-900 font-sans">
+      {/* Bulk Print Template - Modern Style (Off-screen) */}
+      <div className="fixed -left-[9999px] top-0 pointer-events-none">
+        <div ref={bulkPrintRef} style={{ backgroundColor: '#ffffff', color: '#18181b' }} className="w-[210mm] font-sans">
           {selectedClient?.locations && Array.from({ length: Math.ceil(selectedClient.locations.length / 4) }).map((_, pageIndex) => (
             <div key={pageIndex} className="w-[210mm] h-[297mm] grid grid-cols-2 grid-rows-2 p-[10mm] gap-[10mm] page-break-after-always">
               {selectedClient.locations?.slice(pageIndex * 4, (pageIndex * 4) + 4).map((loc) => (
-                <div key={loc.id} className="border border-zinc-100 rounded-[2.5rem] p-8 flex flex-col items-center justify-between text-center relative overflow-hidden bg-white shadow-sm">
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-zinc-50 rounded-bl-full -mr-8 -mt-8 border border-zinc-100" />
-                  <div className="flex flex-col items-center relative z-10">
-                    <div className="w-12 h-12 mb-3 flex items-center justify-center bg-zinc-50 rounded-2xl border border-zinc-100 p-2">
-                      {companyLogo ? (
-                        <img src={companyLogo} alt="Logo" className="w-full h-full object-contain" />
-                      ) : (
-                        <Building2 className="w-8 h-8 text-zinc-200" />
-                      )}
+                <div key={loc.id} style={{ backgroundColor: '#f4f4f5', borderColor: '#e4e4e7' }} className="border rounded-[3.5rem] p-4 flex flex-col items-center relative shadow-inner overflow-hidden">
+                  
+                  {/* QR Section */}
+                  <div className="flex-1 flex flex-col items-center justify-center w-full">
+                    <div style={{ backgroundColor: '#ffffff' }} className="p-6 rounded-[2rem] shadow-xl border border-zinc-100">
+                      <QRCodeSVG 
+                        value={getPublicUrl(selectedClientId, loc.id)}
+                        size={140}
+                        level="H"
+                        includeMargin={false}
+                      />
                     </div>
-                    <h4 className="text-[8px] font-black tracking-[0.2em] text-zinc-400 uppercase">
-                      {companyData?.name || 'FLORES MANUTENÇÃO'}
-                    </h4>
                   </div>
-                  <div className="bg-white p-5 rounded-[2rem] shadow-[0_20px_40px_-10px_rgba(0,0,0,0.05)] border border-zinc-50 relative z-10">
-                    <QRCodeCanvas 
-                      value={getPublicUrl(selectedClientId, loc.id)}
-                      size={160}
-                      level="H"
-                      includeMargin={false}
-                    />
-                  </div>
-                  <div className="w-full relative z-10">
-                    <div className="flex items-center justify-center gap-2 mb-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-                      <span className="text-[8px] font-black text-zinc-300 uppercase tracking-widest">Localização</span>
+
+                  {/* Black Box */}
+                  <div style={{ backgroundColor: '#18181b' }} className="w-full h-[45mm] rounded-[2.5rem] p-6 flex flex-col justify-center shadow-xl relative overflow-hidden">
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-[0.02] pointer-events-none" />
+                    
+                    <div className="relative z-10">
+                      <span style={{ color: 'rgba(255, 255, 255, 0.2)' }} className="text-[6px] font-black uppercase tracking-widest block mb-1">Localização</span>
+                      <h3 style={{ color: '#ffffff' }} className="text-lg font-black uppercase tracking-tight leading-none truncate italic mb-3">
+                        {loc.name}
+                      </h3>
+                      
+                      <div style={{ borderTopColor: 'rgba(255, 255, 255, 0.05)' }} className="pt-3 border-t flex justify-between items-center">
+                        <span style={{ color: 'rgba(255, 255, 255, 0.2)' }} className="text-[5px] font-mono uppercase">ID: {loc.id.slice(0,8)}</span>
+                        <span style={{ color: 'rgba(255, 255, 255, 0.4)' }} className="text-[6px] font-black uppercase tracking-widest">
+                          {companyData?.name || 'FLORES'}
+                        </span>
+                      </div>
                     </div>
-                    <h3 className="text-lg font-black text-zinc-900 uppercase tracking-tight leading-none mb-1">
-                      {loc.name}
-                    </h3>
-                    <p className="text-[7px] text-zinc-300 mt-2 font-mono truncate px-4 uppercase">
-                      ID: {loc.id.slice(0,8)}
-                    </p>
-                  </div>
-                  <div className="absolute bottom-0 left-0 w-full h-1.5 flex">
-                    <div className="flex-1 bg-zinc-100" />
-                    <div className="flex-1 bg-blue-600" />
-                    <div className="flex-1 bg-zinc-900" />
                   </div>
                 </div>
               ))}
