@@ -11,7 +11,7 @@ import {
   BarChart3, Droplets, Zap, ShieldCheck, Megaphone,
   Box, UserCheck, Activity, Maximize2, CheckCircle2, Presentation, LogOut,
   X, Download, FileUp, Database as DatabaseIcon, MessageSquare, Target,
-  Wifi, WifiOff, GripVertical
+  Wifi, WifiOff, GripVertical, ClipboardList, LayoutList
 } from 'lucide-react';
 import { KanbanMirror } from '../components/KanbanMirror';
 import { TicketsMirror } from '../components/TicketsMirror';
@@ -299,13 +299,16 @@ export default function Dashboard() {
       id: 'tickets',
       type: 'wide',
       component: (
-        <Link to="/tickets" className="w-full h-full bg-slate-900/40 backdrop-blur-2xl hover:brightness-110 transition-all flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95">
+        <div 
+          onClick={() => navigate('/tickets')}
+          className="w-full h-full bg-slate-900/40 backdrop-blur-2xl hover:brightness-110 transition-all flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 cursor-pointer"
+        >
           <TicketsMirror 
             tickets={tickets} 
             className="!p-4 !bg-transparent !border-none !shadow-none !rounded-none w-full h-full" 
             showLabel={true}
           />
-        </Link>
+        </div>
       )
     },
     {
@@ -528,37 +531,59 @@ export default function Dashboard() {
       id: 'approvals',
       type: 'wide',
       component: (
-        <Link to="/quotes" className={`w-full h-full p-4 flex flex-col justify-between  group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95 transition-all ${
-          pendingApprovalCount > 0 
-            ? 'bg-gradient-to-br from-amber-500 to-amber-700 animate-pulse-subtle' 
-            : 'bg-gradient-to-br from-zinc-700 to-zinc-800'
-        }`}>
+        <div className="w-full h-full bg-slate-900/40 backdrop-blur-2xl p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95">
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
-            <div className={`p-1.5 md:p-3 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0 ${
-              pendingApprovalCount > 0 ? 'bg-white/30' : 'bg-white/10'
-            }`}>
-              <Clock className="w-6 h-6 md:w-10 md:h-10 text-white" />
-            </div>
-            <div className="overflow-hidden flex-1">
-              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Aprovações Pendentes</p>
-              <div className="space-y-0.5 md:space-y-1">
-                <p className="font-black text-xs md:text-xl truncate text-white leading-tight">Orçamentos</p>
-                <div className="flex items-center gap-1.5 md:gap-2 text-white/80">
-                  {pendingApprovalCount > 0 ? (
-                    <>
-                      <AlertCircle className="w-3 h-3 md:w-4 md:h-4 text-white animate-pulse shrink-0" />
-                      <p className="text-[10px] md:text-sm font-bold text-white truncate">{pendingApprovalCount} aguardando síndico</p>
-                    </>
-                  ) : (
-                    <p className="text-[10px] md:text-sm font-medium truncate">Tudo em dia</p>
-                  )}
-                </div>
+          <div className="flex items-center justify-between mb-4 relative z-10">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-white/10 rounded-xl border border-white/20">
+                <ClipboardList className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/90">Reservatório de OS</h3>
+                <p className="text-[8px] text-white/40 font-bold uppercase tracking-widest">Últimas Realizadas</p>
               </div>
             </div>
+            <Link to="/tickets" className="text-[9px] font-black uppercase tracking-widest text-emerald-400 hover:text-emerald-300 transition-colors">
+              Ver Tudo
+            </Link>
           </div>
-          <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70">Gestão de OS</span>
-        </Link>
+
+          <div className="flex-1 space-y-1.5 relative z-10 overflow-hidden">
+            {[...tickets]
+              .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+              .slice(0, 4)
+              .map((ticket) => (
+                <Link
+                  key={ticket.id}
+                  to={`/tickets/${ticket.id}`}
+                  className="flex items-center justify-between p-2 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 hover:border-white/10 transition-all group/item"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-7 h-7 rounded-lg bg-white/5 flex items-center justify-center shrink-0 border border-white/5">
+                      <span className="text-[7px] font-black text-white/30 uppercase">
+                        {new Date(ticket.date).toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', '')}
+                      </span>
+                    </div>
+                    <p className="text-[10px] font-bold text-white/80 truncate group-hover/item:text-white transition-colors">
+                      {ticket.title || 'Sem título'}
+                    </p>
+                  </div>
+                  <div className={`px-2 py-0.5 rounded-md text-[6px] font-black uppercase tracking-wider shrink-0 bg-white/5 ${
+                    ticket.status === 'CONCLUIDO' ? 'text-emerald-400' : 
+                    ticket.status === 'REALIZANDO' || ticket.status === 'AGUARDANDO_MATERIAL' ? 'text-amber-400' : 
+                    'text-orange-400'
+                  }`}>
+                    {ticket.status === 'CONCLUIDO' ? 'Conc.' : ticket.status === 'REALIZANDO' || ticket.status === 'AGUARDANDO_MATERIAL' ? 'Em And.' : 'Pend.'}
+                  </div>
+                </Link>
+              ))}
+            {tickets.length === 0 && (
+              <p className="text-[10px] text-white/20 italic text-center py-4">Nenhuma OS registrada</p>
+            )}
+          </div>
+          
+          <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70 mt-2">Gestão de OS</span>
+        </div>
       )
     },
     {

@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Hammer, AlertTriangle, CheckCircle2, Clock, 
   TrendingUp, Building2, Bell, ArrowRight, Activity
@@ -18,7 +19,21 @@ interface TicketsMirrorProps {
 }
 
 export function TicketsMirror({ tickets, className = '', showLabel = true }: TicketsMirrorProps) {
+  const navigate = useNavigate();
   // Data processing
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const currentMonthTickets = tickets.filter(t => {
+    const d = new Date(t.date);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+
+  const currentMonthCount = currentMonthTickets.length;
+  const currentMonthConcluded = currentMonthTickets.filter(t => t.status === 'CONCLUIDO').length;
+  const currentMonthPercent = currentMonthCount > 0 ? Math.round((currentMonthConcluded / currentMonthCount) * 100) : 0;
+
   const total = tickets.length;
   const concluded = tickets.filter(t => t.status === 'CONCLUIDO').length;
   const inProgress = tickets.filter(t => t.status === 'REALIZANDO' || t.status === 'AGUARDANDO_MATERIAL').length;
@@ -47,14 +62,17 @@ export function TicketsMirror({ tickets, className = '', showLabel = true }: Tic
     value: d.total
   })).slice(0, 3);
 
-  // Weekly Flow (Mocked for visual consistency with image)
-  const weeklyFlow = [
-    { day: 'Seg', task: 'Jardinagem A', status: 'Em And.', color: 'text-amber-400' },
-    { day: 'Ter', task: 'Elétrica B', status: 'Conc.', color: 'text-emerald-400' },
-    { day: 'Qua', task: 'Segurança A', status: 'Pend.', color: 'text-orange-400' },
-    { day: 'Qui', task: 'Cisterna C', status: 'Conc.', color: 'text-emerald-400' },
-    { day: 'Sex', task: 'Piscina A', status: 'Em And.', color: 'text-amber-400' },
-  ];
+  // Real Weekly Flow
+  const realWeeklyFlow = [...tickets]
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 5)
+    .map(t => ({
+      id: t.id,
+      day: new Date(t.date).toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase().replace('.', ''),
+      task: t.title || 'Sem título',
+      status: t.status === 'CONCLUIDO' ? 'Conc.' : t.status === 'REALIZANDO' || t.status === 'AGUARDANDO_MATERIAL' ? 'Em And.' : 'Pend.',
+      color: t.status === 'CONCLUIDO' ? 'text-emerald-400' : t.status === 'REALIZANDO' || t.status === 'AGUARDANDO_MATERIAL' ? 'text-amber-400' : 'text-orange-400'
+    }));
 
   // Line Chart Data (Mocked)
   const lineData = [
@@ -188,20 +206,25 @@ export function TicketsMirror({ tickets, className = '', showLabel = true }: Tic
                     strokeWidth="6"
                     fill="transparent"
                     strokeDasharray={213.6}
-                    strokeDashoffset={213.6 - (213.6 * 98) / 100}
+                    strokeDashoffset={213.6 - (213.6 * currentMonthPercent) / 100}
                     className="text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]"
                   />
                 </svg>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-lg font-black">98%</span>
+                  <span className="text-lg font-black">{currentMonthPercent}%</span>
                 </div>
               </div>
               <div className="w-full">
-                <p className="text-[7px] font-black uppercase text-white/40 mb-0.5">TMD Total</p>
-                <p className="text-[9px] font-bold text-white/80 leading-tight">Soluções Rápidas & Manutenções</p>
+                <p className="text-[7px] font-black uppercase text-white/40 mb-0.5">OS no Mês Vigente</p>
+                <p className="text-xl font-black text-white leading-tight">{currentMonthCount}</p>
+                <p className="text-[8px] font-bold text-white/60 uppercase tracking-widest mt-1">
+                  {currentMonthConcluded} Concluídas
+                </p>
                 <div className="mt-2 flex items-center justify-center gap-1.5 bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/30 mx-auto w-fit">
                   <AlertTriangle className="w-2.5 h-2.5 text-amber-400" />
-                  <span className="text-[7px] font-black text-amber-400 uppercase">1 OS em atraso</span>
+                  <span className="text-[7px] font-black text-amber-400 uppercase">
+                    {currentMonthTickets.filter(t => t.status !== 'CONCLUIDO').length} Pendentes
+                  </span>
                 </div>
               </div>
             </div>
@@ -233,17 +256,27 @@ export function TicketsMirror({ tickets, className = '', showLabel = true }: Tic
           <div className="bg-white/5 rounded-3xl p-4 border border-white/5">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-white/50 mb-4">Fluxo de OS Semanal</h4>
             <div className="space-y-1.5">
-              {weeklyFlow.map((item, idx) => (
-                <div key={idx} className="flex items-center justify-between bg-white/5 p-1.5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+              {realWeeklyFlow.map((item, idx) => (
+                <div 
+                  key={idx} 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/tickets/${item.id}`);
+                  }}
+                  className="flex items-center justify-between bg-white/5 p-1.5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors cursor-pointer group/item"
+                >
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <span className="text-[7px] font-black text-white/30 uppercase w-5 shrink-0">{item.day}</span>
-                    <span className="text-[8px] font-bold truncate text-white/80">{item.task}</span>
+                    <span className="text-[8px] font-bold truncate text-white/80 group-hover/item:text-white transition-colors">{item.task}</span>
                   </div>
                   <span className={`text-[6px] font-black uppercase px-1 py-0.5 rounded-md bg-white/5 shrink-0 ml-1 ${item.color}`}>
                     {item.status}
                   </span>
                 </div>
               ))}
+              {realWeeklyFlow.length === 0 && (
+                <p className="text-[8px] text-white/30 italic text-center py-4">Nenhuma OS recente</p>
+              )}
             </div>
           </div>
 
