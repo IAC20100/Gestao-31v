@@ -46,7 +46,7 @@ interface TileData {
   component: React.ReactNode;
 }
 
-function SortableTile({ id, children, className, onResize, onClose }: { id: string, children: React.ReactNode, className: string, onResize: (e: React.MouseEvent) => void, onClose: (e: React.MouseEvent) => void }) {
+function SortableTile({ id, children, className, onResize, onClose, isEditMode }: { id: string, children: React.ReactNode, className: string, onResize: (e: React.MouseEvent) => void, onClose: (e: React.MouseEvent) => void, isEditMode: boolean }) {
   const {
     attributes,
     listeners,
@@ -54,7 +54,10 @@ function SortableTile({ id, children, className, onResize, onClose }: { id: stri
     transform,
     transition,
     isDragging
-  } = useSortable({ id });
+  } = useSortable({ 
+    id,
+    disabled: !isEditMode 
+  });
 
   const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
@@ -68,37 +71,43 @@ function SortableTile({ id, children, className, onResize, onClose }: { id: stri
     <div
       ref={setNodeRef}
       style={style}
-      className={`${className} relative group`}
+      className={`${className} relative group ${isEditMode ? 'ring-2 ring-white/20 ring-inset' : ''}`}
     >
-      {/* Drag Handle - Visible on mobile, hover on desktop */}
-      <div 
-        {...attributes} 
-        {...listeners}
-        className="absolute top-2 left-2 p-1.5 bg-black/40 hover:bg-black/60 text-white rounded-lg transition-all opacity-100 lg:opacity-0 lg:group-hover:opacity-100 z-50 cursor-grab active:cursor-grabbing"
-        style={{ touchAction: 'none' }}
-      >
-        <GripVertical className="w-4 h-4" />
-      </div>
+      {/* Drag Handle - Only visible in edit mode */}
+      {isEditMode && (
+        <div 
+          {...attributes} 
+          {...listeners}
+          className="absolute top-2 left-2 p-1.5 bg-black/60 text-white rounded-lg z-50 cursor-grab active:cursor-grabbing shadow-xl border border-white/20"
+          style={{ touchAction: 'none' }}
+        >
+          <GripVertical className="w-4 h-4" />
+        </div>
+      )}
 
       {children}
-      <div className="absolute top-2 right-2 flex gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity z-50">
-        <button
-          onClick={onResize}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="p-1.5 bg-black/40 hover:bg-black/60 text-white rounded-lg transition-colors"
-          title="Alterar Tamanho"
-        >
-          <Maximize2 className="w-4 h-4" />
-        </button>
-        <button
-          onClick={onClose}
-          onPointerDown={(e) => e.stopPropagation()}
-          className="p-1.5 bg-red-500/60 hover:bg-red-500 text-white rounded-lg transition-colors"
-          title="Ocultar"
-        >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+      
+      {/* Action Buttons - Only visible in edit mode */}
+      {isEditMode && (
+        <div className="absolute top-2 right-2 flex gap-1 z-50">
+          <button
+            onClick={onResize}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="p-1.5 bg-black/60 hover:bg-black/80 text-white rounded-lg transition-colors border border-white/20"
+            title="Alterar Tamanho"
+          >
+            <Maximize2 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={onClose}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="p-1.5 bg-red-500/80 hover:bg-red-500 text-white rounded-lg transition-colors border border-white/20"
+            title="Ocultar"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -196,6 +205,7 @@ export default function Dashboard() {
     setTileOrder: updateStoreTileOrder
   } = useStore();
 
+  const [isEditMode, setIsEditMode] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
   const backupInputRef = useRef<HTMLInputElement>(null);
   
@@ -1062,7 +1072,20 @@ export default function Dashboard() {
       </div>
 
       <header className="mb-4 md:mb-12 flex justify-between items-start relative z-10 gap-2">
-        <h1 className="text-3xl sm:text-4xl md:text-6xl font-light tracking-tight text-white shrink-0">Iniciar</h1>
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-light tracking-tight text-white shrink-0">Iniciar</h1>
+          <button 
+            onClick={() => setIsEditMode(!isEditMode)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest transition-all w-fit ${
+              isEditMode 
+                ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]' 
+                : 'bg-white/10 text-white/60 hover:bg-white/20'
+            }`}
+          >
+            <Columns className="w-3 h-3" />
+            {isEditMode ? 'Salvar Layout' : 'Personalizar'}
+          </button>
+        </div>
         <div className="flex items-center gap-2 md:gap-6 min-w-0">
           <button 
             onClick={toggleTheme}
@@ -1124,6 +1147,7 @@ export default function Dashboard() {
                   key={tile.id} 
                   id={tile.id} 
                   className={sizeClasses}
+                  isEditMode={isEditMode}
                   onResize={(e) => handleResize(tile.id, tile.type, e)}
                   onClose={(e) => {
                     e.preventDefault();
