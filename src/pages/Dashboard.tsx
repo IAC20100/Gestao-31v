@@ -21,6 +21,8 @@ import { ReceiptsMirror } from '../components/ReceiptsMirror';
 import { QuotesMirror } from '../components/QuotesMirror';
 import { WaterManagementMirror } from '../components/WaterManagementMirror';
 import { MonitoringMirror } from '../components/MonitoringMirror';
+import { Modal } from '../components/Modal';
+import toast from 'react-hot-toast';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import {
   DndContext, 
@@ -231,6 +233,9 @@ export default function Dashboard() {
 
   const [isEditMode, setIsEditMode] = useState(false);
   const [showBackupModal, setShowBackupModal] = useState(false);
+  const [isAddingMoneyToGoal, setIsAddingMoneyToGoal] = useState(false);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [moneyToAdd, setMoneyToAdd] = useState(0);
   const backupInputRef = useRef<HTMLInputElement>(null);
   
   const openTickets = tickets.filter(t => t.status !== 'CONCLUIDO').length;
@@ -382,44 +387,26 @@ export default function Dashboard() {
       type: 'wide',
       component: (
         <div className="w-full h-full bg-slate-900/40 backdrop-blur-2xl p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 transition-all">
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          
-          <div className="flex-1 grid grid-cols-2 gap-4 relative z-10 overflow-hidden">
+          <div className="flex-1 flex flex-col relative z-10 overflow-hidden">
             <div 
-              className="flex flex-col justify-center border-r border-white/10 pr-4 cursor-pointer hover:bg-white/5 rounded-xl transition-all group/fin" 
+              className="flex-1 flex flex-col justify-center p-4 cursor-pointer hover:bg-white/5 rounded-2xl transition-all group/fin border border-white/5" 
               onClick={() => navigate('/financial')}
             >
-              <CostsMirror 
-                costs={costs} 
-                className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full" 
-                hideFooter={true}
-              />
-              <div className="mt-2">
-                <p className="text-[8px] font-black uppercase text-white/40 mb-0.5 tracking-widest">Saldo Atual</p>
-                <span className="text-sm font-black text-white group-hover/fin:text-emerald-400 transition-colors">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(saldo)}
-                </span>
-              </div>
-            </div>
-
-            <div 
-              className="flex flex-col justify-center pl-4 cursor-pointer hover:bg-white/5 rounded-xl transition-all group/goals" 
-              onClick={() => navigate('/financial')}
-            >
-              <SavingsMirror 
-                goals={savingsGoals} 
-                className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full" 
-                hideFooter={true}
-              />
-              <div className="mt-2 flex items-center justify-between">
-                <div>
-                  <p className="text-[8px] font-black uppercase text-white/40 mb-0.5 tracking-widest">Metas & Projetos</p>
-                  <span className="text-sm font-black text-white group-hover/goals:text-amber-400 transition-colors">
-                    {savingsGoals.filter(g => g.status === 'COMPLETED').length} / {savingsGoals.length}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                <CostsMirror 
+                  costs={costs} 
+                  className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full" 
+                  hideFooter={true}
+                />
+                <div className="flex flex-col items-start md:items-end justify-center md:pr-4 border-t md:border-t-0 md:border-l border-white/10 pt-4 md:pt-0 md:pl-6">
+                  <p className="text-[10px] font-black uppercase text-white/40 mb-1 tracking-widest">Saldo Atual</p>
+                  <span className="text-3xl font-black text-white group-hover/fin:text-emerald-400 transition-colors">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(saldo)}
                   </span>
-                </div>
-                <div className="p-1.5 bg-amber-500/20 rounded-lg border border-amber-500/30 group-hover/goals:scale-110 transition-transform">
-                  <Target className="w-3 h-3 text-amber-400" />
+                  <div className="mt-4 flex items-center gap-2 bg-emerald-500/10 px-3 py-1.5 rounded-xl border border-emerald-500/20">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Fluxo Ativo</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -431,10 +418,10 @@ export default function Dashboard() {
                 <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
               <div className="flex flex-col min-w-0">
-                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md truncate">Financeiro & Metas</span>
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md truncate">Gestão Financeira</span>
                 <div className="flex items-center gap-1">
                   <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span className="text-[6px] md:text-[8px] font-bold text-white/50 uppercase tracking-widest truncate">Gestão Unificada</span>
+                  <span className="text-[6px] md:text-[8px] font-bold text-white/50 uppercase tracking-widest truncate">Controle de Fluxo</span>
                 </div>
               </div>
             </div>
@@ -1051,6 +1038,24 @@ export default function Dashboard() {
     savingsGoals.length, costs.length, consumptionReadings.length
   ]);
 
+  const handleAddMoneyToGoal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedGoalId || moneyToAdd <= 0) return;
+
+    const goal = savingsGoals.find(g => g.id === selectedGoalId);
+    if (goal) {
+      const newAmount = goal.currentAmount + moneyToAdd;
+      useStore.getState().updateSavingsGoal(selectedGoalId, {
+        currentAmount: newAmount,
+        status: newAmount >= goal.targetAmount ? 'COMPLETED' : goal.status
+      });
+      toast.success(`R$ ${moneyToAdd.toLocaleString('pt-BR')} adicionados à meta!`);
+      setIsAddingMoneyToGoal(false);
+      setMoneyToAdd(0);
+      setSelectedGoalId(null);
+    }
+  };
+
   const handleExportBackup = () => {
     const backupData = {
       clients,
@@ -1260,6 +1265,61 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* Add Money to Goal Modal */}
+      <Modal 
+        isOpen={isAddingMoneyToGoal} 
+        onClose={() => {
+          setIsAddingMoneyToGoal(false);
+          setMoneyToAdd(0);
+          setSelectedGoalId(null);
+        }} 
+        title="Adicionar Dinheiro à Meta"
+        maxWidth="sm"
+        glass={true}
+      >
+        <form onSubmit={handleAddMoneyToGoal} className="space-y-6 p-2">
+          <div>
+            <p className="text-white/60 text-sm mb-4">
+              Meta: <span className="text-white font-bold">{savingsGoals.find(g => g.id === selectedGoalId)?.title}</span>
+            </p>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor a Adicionar (R$) *</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+              <input 
+                type="number" 
+                value={moneyToAdd || ''}
+                onChange={(e) => setMoneyToAdd(parseFloat(e.target.value) || 0)}
+                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                min="0.01"
+                step="0.01"
+                required
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <div className="pt-6 flex justify-end gap-3">
+            <button 
+              type="button"
+              onClick={() => {
+                setIsAddingMoneyToGoal(false);
+                setMoneyToAdd(0);
+                setSelectedGoalId(null);
+              }}
+              className="px-6 py-3 text-white/60 hover:text-white transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-10 py-3 rounded-xl font-bold border border-emerald-500/30 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+            >
+              ADICIONAR
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

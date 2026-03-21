@@ -32,6 +32,9 @@ export default function Financial() {
   const [isAddingCost, setIsAddingCost] = useState(false);
   const [isAddingIncome, setIsAddingIncome] = useState(false);
   const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [isAddingMoneyToGoal, setIsAddingMoneyToGoal] = useState(false);
+  const [selectedGoalId, setSelectedGoalId] = useState<string | null>(null);
+  const [moneyToAdd, setMoneyToAdd] = useState(0);
   const [editingTransaction, setEditingTransaction] = useState<{ type: 'cost' | 'income' | 'goal', id: string } | null>(null);
   
   // Form states
@@ -167,6 +170,24 @@ export default function Financial() {
     toast.success('Meta adicionada com sucesso!');
     setIsAddingGoal(false);
     resetForm();
+  };
+
+  const handleAddMoneyToGoal = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedGoalId || moneyToAdd <= 0) return;
+
+    const goal = savingsGoals.find(g => g.id === selectedGoalId);
+    if (goal) {
+      const newAmount = goal.currentAmount + moneyToAdd;
+      updateSavingsGoal(selectedGoalId, {
+        currentAmount: newAmount,
+        status: newAmount >= goal.targetAmount ? 'COMPLETED' : goal.status
+      });
+      toast.success(`R$ ${moneyToAdd.toLocaleString('pt-BR')} adicionados à meta!`);
+      setIsAddingMoneyToGoal(false);
+      setMoneyToAdd(0);
+      setSelectedGoalId(null);
+    }
   };
 
   const totalIncome = receipts.reduce((sum, r) => sum + r.value, 0);
@@ -672,7 +693,15 @@ export default function Financial() {
           </motion.button>
         </div>
         <div className="bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/10 shadow-2xl">
-          <SavingsMirror goals={savingsGoals} showAll={true} />
+          <SavingsMirror 
+            goals={savingsGoals} 
+            showAll={true} 
+            onAddMoney={(id) => {
+              setSelectedGoalId(id);
+              setIsAddingMoneyToGoal(true);
+            }}
+            onDelete={(id) => handleDelete('goal', id)}
+          />
         </div>
       </div>
 
@@ -1076,14 +1105,26 @@ export default function Financial() {
                   </div>
                   <div className="flex gap-2">
                     <button 
+                      onClick={() => {
+                        setSelectedGoalId(goal.id);
+                        setIsAddingMoneyToGoal(true);
+                      }}
+                      className="p-3 text-emerald-400 hover:bg-emerald-500/20 rounded-xl transition-all border border-emerald-500/20"
+                      title="Adicionar Dinheiro"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                    <button 
                       onClick={() => handleEdit('goal', goal.id)}
-                      className="p-3 text-white/20 hover:text-cyan-400 hover:bg-cyan-500/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                      className="p-3 text-cyan-400 hover:bg-cyan-500/20 rounded-xl transition-all border border-cyan-500/20"
+                      title="Editar Meta"
                     >
                       <Plus className="w-5 h-5 rotate-45" />
                     </button>
                     <button 
                       onClick={() => handleDelete('goal', goal.id)}
-                      className="p-3 text-white/20 hover:text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                      className="p-3 text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all border border-rose-500/20"
+                      title="Excluir Meta"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
@@ -1218,6 +1259,8 @@ export default function Financial() {
             </div>
           )}
         </div>
+      </div>
+
       </div>
 
       {/* Edit Transaction/Goal Modal */}
@@ -1647,7 +1690,61 @@ export default function Financial() {
           </div>
         </form>
       </Modal>
-    </div>
+
+      {/* Add Money to Goal Modal */}
+      <Modal 
+        isOpen={isAddingMoneyToGoal} 
+        onClose={() => {
+          setIsAddingMoneyToGoal(false);
+          setMoneyToAdd(0);
+          setSelectedGoalId(null);
+        }} 
+        title="Adicionar Dinheiro à Meta"
+        maxWidth="sm"
+        glass={true}
+      >
+        <form onSubmit={handleAddMoneyToGoal} className="space-y-6 p-2">
+          <div>
+            <p className="text-white/60 text-sm mb-4">
+              Meta: <span className="text-white font-bold">{savingsGoals.find(g => g.id === selectedGoalId)?.title}</span>
+            </p>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor a Adicionar (R$) *</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+              <input 
+                type="number" 
+                value={moneyToAdd || ''}
+                onChange={(e) => setMoneyToAdd(parseFloat(e.target.value) || 0)}
+                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                min="0.01"
+                step="0.01"
+                required
+                autoFocus
+              />
+            </div>
+          </div>
+
+          <div className="pt-6 flex justify-end gap-3">
+            <button 
+              type="button"
+              onClick={() => {
+                setIsAddingMoneyToGoal(false);
+                setMoneyToAdd(0);
+                setSelectedGoalId(null);
+              }}
+              className="px-6 py-3 text-white/60 hover:text-white transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-10 py-3 rounded-xl font-bold border border-emerald-500/30 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+            >
+              ADICIONAR
+            </button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -15,9 +15,6 @@ export function CostsMirror({ costs, className = "", hideFooter = false }: Costs
   
   return (
     <div className={`relative bg-slate-900/40 backdrop-blur-2xl border border-white/20 p-3 md:p-5 rounded-3xl md:rounded-[2.2rem] shadow-2xl overflow-hidden ${className}`}>
-      {/* Glass Shine Effect */}
-      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/10 to-transparent pointer-events-none"></div>
-      
       <div className="flex flex-col gap-2 md:gap-3 relative z-10">
         {recentCosts.length > 0 ? (
           recentCosts.map((cost, idx) => {
