@@ -18,6 +18,7 @@ import { TicketsMirror } from '../components/TicketsMirror';
 import { SavingsMirror } from '../components/SavingsMirror';
 import { CostsMirror } from '../components/CostsMirror';
 import { ReceiptsMirror } from '../components/ReceiptsMirror';
+import { QuotesMirror } from '../components/QuotesMirror';
 import { WaterManagementMirror } from '../components/WaterManagementMirror';
 import { MonitoringMirror } from '../components/MonitoringMirror';
 import { useState, useEffect, useMemo, useRef } from 'react';
@@ -215,7 +216,7 @@ function WeatherTile() {
 export default function Dashboard() {
   const navigate = useNavigate();
   const { 
-    clients, tickets, products, receipts, costs, 
+    clients, tickets, products, receipts, costs, quotes,
     appointments, companyLogo, restoreData, theme, 
     toggleTheme, scheduledMaintenances, addNotification,
     notifications, supplyItems, payments, notices,
@@ -360,61 +361,103 @@ export default function Dashboard() {
       )
     },
     {
+      id: 'quotes',
+      type: 'wide',
+      component: (
+        <div 
+          onClick={() => navigate('/quotes')}
+          className="w-full h-full bg-slate-900/40 backdrop-blur-2xl hover:brightness-110 transition-all flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 cursor-pointer"
+        >
+          <QuotesMirror 
+            quotes={quotes} 
+            clients={clients}
+            className="!p-4 !bg-transparent !border-none !shadow-none !rounded-none w-full h-full" 
+            showLabel={true}
+          />
+        </div>
+      )
+    },
+    {
       id: 'financial',
       type: 'wide',
       component: (
-        <Link to="/financial" className="w-full h-full bg-gradient-to-br from-[#22b14c] to-[#1a943d] hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95">
+        <div className="w-full h-full bg-slate-900/40 backdrop-blur-2xl p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 transition-all">
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
           
-          <div className="flex-1 flex items-center justify-center relative z-10 overflow-hidden">
-            <CostsMirror 
-              costs={costs} 
-              className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full max-w-[260px]" 
-              hideFooter={true}
-            />
-          </div>
-
-          <div className="flex justify-between items-end relative z-10 mt-2 gap-2">
-            <div className="flex items-center gap-2 md:gap-3 min-w-0">
-              <div className="p-1.5 md:p-2 bg-white/20 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
-                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white" />
-              </div>
-              <div className="flex flex-col min-w-0">
-                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md truncate">Financeiro</span>
-                <div className="flex items-center gap-1">
-                  <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                  <span className="text-[6px] md:text-[8px] font-bold text-white/50 uppercase tracking-widest truncate">Inteligência Ativa</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col items-end shrink-0">
-              <p className="text-[6px] md:text-[8px] font-black uppercase text-white/50 mb-0.5">Saldo Atual</p>
-              <div className="bg-black/20 px-2 md:px-3 py-0.5 md:py-1 rounded-full border border-white/10 backdrop-blur-md">
-                <span className="text-xs md:text-sm font-black drop-shadow-lg text-white">
+          <div className="flex-1 grid grid-cols-2 gap-4 relative z-10 overflow-hidden">
+            <div 
+              className="flex flex-col justify-center border-r border-white/10 pr-4 cursor-pointer hover:bg-white/5 rounded-xl transition-all group/fin" 
+              onClick={() => navigate('/financial')}
+            >
+              <CostsMirror 
+                costs={costs} 
+                className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full" 
+                hideFooter={true}
+              />
+              <div className="mt-2">
+                <p className="text-[8px] font-black uppercase text-white/40 mb-0.5 tracking-widest">Saldo Atual</p>
+                <span className="text-sm font-black text-white group-hover/fin:text-emerald-400 transition-colors">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(saldo)}
                 </span>
               </div>
             </div>
+
+            <div 
+              className="flex flex-col justify-center pl-4 cursor-pointer hover:bg-white/5 rounded-xl transition-all group/goals" 
+              onClick={() => navigate('/financial')}
+            >
+              <SavingsMirror 
+                goals={savingsGoals} 
+                className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full" 
+                hideFooter={true}
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <div>
+                  <p className="text-[8px] font-black uppercase text-white/40 mb-0.5 tracking-widest">Metas & Projetos</p>
+                  <span className="text-sm font-black text-white group-hover/goals:text-amber-400 transition-colors">
+                    {savingsGoals.filter(g => g.status === 'COMPLETED').length} / {savingsGoals.length}
+                  </span>
+                </div>
+                <div className="p-1.5 bg-amber-500/20 rounded-lg border border-amber-500/30 group-hover/goals:scale-110 transition-transform">
+                  <Target className="w-3 h-3 text-amber-400" />
+                </div>
+              </div>
+            </div>
           </div>
-        </Link>
+
+          <div className="flex justify-between items-end relative z-10 mt-2 gap-2">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <div className="p-1.5 md:p-2 bg-white/10 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
+                <TrendingUp className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] md:text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md truncate">Financeiro & Metas</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className="text-[6px] md:text-[8px] font-bold text-white/50 uppercase tracking-widest truncate">Gestão Unificada</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )
     },
     {
       id: 'calendar',
       type: 'wide',
       component: (
-        <Link to="/calendar" className="w-full h-full bg-gradient-to-br from-[#4285f4] to-[#3367d6] hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95 text-white">
+        <Link to="/calendar" className="w-full h-full bg-slate-900/40 backdrop-blur-2xl hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 text-white">
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
           <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
-            <div className="p-1.5 md:p-3 bg-white/20 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
+            <div className="p-1.5 md:p-3 bg-white/10 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
               <CalendarIcon className="w-6 h-6 md:w-10 md:h-10 text-white" />
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Agenda</p>
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/50 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Agenda</p>
               {nextAppointment ? (
                 <div className="space-y-0.5 md:space-y-1">
                   <p className="font-black text-xs md:text-xl truncate text-white leading-tight">{nextAppointment.title}</p>
-                  <div className="flex items-center gap-1.5 md:gap-2 text-white/80">
+                  <div className="flex items-center gap-1.5 md:gap-2 text-white/60">
                     <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 shrink-0" />
                     <p className="text-[10px] md:text-sm font-medium truncate">
                       {nextAppointment.start ? (
@@ -428,11 +471,11 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <p className="text-[10px] md:text-xs italic text-white/60 mt-1">Sem compromissos</p>
+                <p className="text-[10px] md:text-xs italic text-white/40 mt-1">Sem compromissos</p>
               )}
             </div>
           </div>
-          <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70">Calendário</span>
+          <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/40">Calendário</span>
         </Link>
       )
     },
@@ -904,46 +947,7 @@ export default function Dashboard() {
         </Link>
       )
     },
-    {
-      id: 'savings-goals',
-      type: 'wide',
-      component: (
-        <Link to="/accountability?tab=goals" className="w-full h-full bg-gradient-to-br from-[#059669] to-[#047857] hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95">
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          
-          <div className="flex-1 flex items-center justify-center relative z-10 overflow-hidden">
-            <SavingsMirror 
-              goals={savingsGoals} 
-              className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full max-w-[260px]" 
-              hideFooter={true}
-            />
-          </div>
 
-          <div className="flex justify-between items-end relative z-10 mt-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                <Target className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md">Projetos & Metas</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                  <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest">Progresso Ativo</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col items-end">
-              <p className="text-[8px] font-black uppercase text-white/50 mb-0.5">Concluídos</p>
-              <div className="bg-black/20 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
-                <span className="text-sm font-black drop-shadow-lg text-white">
-                  {savingsGoals.filter(g => g.status === 'COMPLETED').length}
-                </span>
-              </div>
-            </div>
-          </div>
-        </Link>
-      )
-    },
     {
       id: 'water-management',
       type: 'wide',

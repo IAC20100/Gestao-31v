@@ -5,10 +5,11 @@ import {
   DollarSign, TrendingUp, TrendingDown, Plus, Trash2, Wallet, 
   FileSpreadsheet, BarChart3, Lightbulb, ArrowUpRight, ArrowDownRight, 
   X, Calendar, Tag, User, ShieldCheck, FolderOpen, 
-  FileText, UserCheck 
+  FileText, UserCheck, Target
 } from 'lucide-react';
 import { v4 as uuidv4 } from 'uuid';
 import { Modal } from '../components/Modal';
+import { SavingsMirror } from '../components/SavingsMirror';
 import Papa from 'papaparse';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, 
@@ -22,19 +23,50 @@ import toast from 'react-hot-toast';
 
 export default function Financial() {
   const navigate = useNavigate();
-  const { receipts, costs, addCost, deleteCost, addReceipt, deleteReceipt, updateCost, updateReceipt, clients, payments } = useStore();
+  const { 
+    receipts, costs, addCost, deleteCost, addReceipt, deleteReceipt, 
+    updateCost, updateReceipt, clients, payments, savingsGoals, 
+    addSavingsGoal, updateSavingsGoal, deleteSavingsGoal 
+  } = useStore();
   
   const [isAddingCost, setIsAddingCost] = useState(false);
   const [isAddingIncome, setIsAddingIncome] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<{ type: 'cost' | 'income', id: string } | null>(null);
+  const [isAddingGoal, setIsAddingGoal] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<{ type: 'cost' | 'income' | 'goal', id: string } | null>(null);
+  
+  // Form states
   const [description, setDescription] = useState('');
   const [value, setValue] = useState(0);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [category, setCategory] = useState('Material');
   const [clientId, setClientId] = useState('');
+  
+  // Goal specific states
+  const [goalTitle, setGoalTitle] = useState('');
+  const [goalTarget, setGoalTarget] = useState(0);
+  const [goalCurrent, setGoalCurrent] = useState(0);
+  const [goalDeadline, setGoalDeadline] = useState('');
+  const [goalCategory, setGoalCategory] = useState('Reserva');
+  const [goalIcon, setGoalIcon] = useState('Target');
+  const [goalStatus, setGoalStatus] = useState<'IN_PROGRESS' | 'COMPLETED' | 'PAUSED'>('IN_PROGRESS');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleEdit = (type: 'cost' | 'income', id: string) => {
+  const handleEdit = (type: 'cost' | 'income' | 'goal', id: string) => {
+    if (type === 'goal') {
+      const goal = savingsGoals.find(g => g.id === id);
+      if (goal) {
+        setGoalTitle(goal.title);
+        setGoalTarget(goal.targetAmount);
+        setGoalCurrent(goal.currentAmount);
+        setGoalDeadline(goal.deadline);
+        setGoalCategory(goal.category);
+        setGoalIcon(goal.icon);
+        setGoalStatus(goal.status);
+        setEditingTransaction({ type, id });
+      }
+      return;
+    }
+
     const transaction = type === 'cost' 
       ? costs.find(c => c.id === id) 
       : receipts.find(r => r.id === id);
@@ -63,7 +95,7 @@ export default function Financial() {
         category
       });
       toast.success('Custo atualizado com sucesso!');
-    } else {
+    } else if (editingTransaction.type === 'income') {
       updateReceipt(editingTransaction.id, {
         clientId,
         description,
@@ -71,19 +103,33 @@ export default function Financial() {
         date
       });
       toast.success('Receita atualizada com sucesso!');
+    } else if (editingTransaction.type === 'goal') {
+      updateSavingsGoal(editingTransaction.id, {
+        title: goalTitle,
+        targetAmount: goalTarget,
+        currentAmount: goalCurrent,
+        deadline: goalDeadline,
+        category: goalCategory,
+        icon: goalIcon,
+        status: goalStatus
+      });
+      toast.success('Meta atualizada com sucesso!');
     }
 
     setEditingTransaction(null);
     resetForm();
   };
 
-  const handleDelete = (type: 'income' | 'cost', id: string) => {
+  const handleDelete = (type: 'income' | 'cost' | 'goal', id: string) => {
     if (type === 'income') {
       deleteReceipt(id);
       toast.success('Receita excluída com sucesso!');
-    } else {
+    } else if (type === 'cost') {
       deleteCost(id);
-      toast.success('Custo excluída com sucesso!');
+      toast.success('Custo excluído com sucesso!');
+    } else if (type === 'goal') {
+      deleteSavingsGoal(id);
+      toast.success('Meta excluída com sucesso!');
     }
   };
 
@@ -93,6 +139,34 @@ export default function Financial() {
     setDate(new Date().toISOString().split('T')[0]);
     setCategory('Material');
     setClientId('');
+    setGoalTitle('');
+    setGoalTarget(0);
+    setGoalCurrent(0);
+    setGoalDeadline('');
+    setGoalCategory('Reserva');
+    setGoalIcon('Target');
+    setGoalStatus('IN_PROGRESS');
+  };
+
+  const handleAddGoal = async () => {
+    if (!goalTitle || goalTarget <= 0) {
+      toast.error('Preencha o título e o valor da meta.');
+      return;
+    }
+
+    await addSavingsGoal({
+      title: goalTitle,
+      targetAmount: goalTarget,
+      currentAmount: goalCurrent,
+      deadline: goalDeadline,
+      category: goalCategory,
+      icon: goalIcon,
+      status: goalStatus
+    });
+
+    toast.success('Meta adicionada com sucesso!');
+    setIsAddingGoal(false);
+    resetForm();
   };
 
   const totalIncome = receipts.reduce((sum, r) => sum + r.value, 0);
@@ -362,9 +436,20 @@ export default function Financial() {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => {
-                setDescription('');
-                setValue(0);
-                setClientId('');
+                resetForm();
+                setIsAddingGoal(true);
+              }}
+              className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-6 py-3 flex items-center gap-2 border border-emerald-500/30 transition-all rounded-2xl backdrop-blur-2xl font-black uppercase tracking-widest text-[10px] shadow-[0_0_30px_rgba(16,185,129,0.1)]"
+            >
+              <Target className="w-4 h-4" /> 
+              <span>Meta</span>
+            </motion.button>
+
+            <motion.button 
+              whileHover={{ scale: 1.02, y: -2 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => {
+                resetForm();
                 setIsAddingIncome(true);
               }}
               className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 px-6 py-3 flex items-center gap-2 border border-cyan-500/30 transition-all rounded-2xl backdrop-blur-2xl font-black uppercase tracking-widest text-[10px] shadow-[0_0_30px_rgba(6,182,212,0.1)]"
@@ -390,91 +475,88 @@ export default function Financial() {
         </header>
 
       {/* High-Fidelity Dashboard Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-16 relative z-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-16 relative z-10">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+          className="bg-white/5 rounded-[2.5rem] p-6 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/20 transition-all duration-700" />
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Receitas Totais</h3>
-            <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl border border-cyan-500/20">
-              <TrendingUp className="w-5 h-5" />
+            <div className="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+              <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-4xl font-black text-white tracking-tighter mb-2">
+          <p className="text-2xl font-black text-white tracking-tighter mb-2">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalIncome)}
           </p>
-          <div className="flex items-center gap-2 text-cyan-400/60 text-[10px] font-bold uppercase tracking-widest">
-            <ArrowUpRight className="w-3 h-3" />
+          <div className="flex items-center gap-2 text-cyan-400/60 text-[8px] font-bold uppercase tracking-widest">
+            <ArrowUpRight className="w-2 h-2" />
             <span>+12.5% vs last month</span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+          className="bg-white/5 rounded-[2.5rem] p-6 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-rose-500/20 transition-all duration-700" />
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Despesas Totais</h3>
-            <div className="p-3 bg-rose-500/10 text-rose-400 rounded-2xl border border-rose-500/20">
-              <TrendingDown className="w-5 h-5" />
+            <div className="p-2 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20">
+              <TrendingDown className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-4xl font-black text-white tracking-tighter mb-2">
+          <p className="text-2xl font-black text-white tracking-tighter mb-2">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalCosts)}
           </p>
-          <div className="flex items-center gap-2 text-rose-400/60 text-[10px] font-bold uppercase tracking-widest">
-            <ArrowDownRight className="w-3 h-3" />
+          <div className="flex items-center gap-2 text-rose-400/60 text-[8px] font-bold uppercase tracking-widest">
+            <ArrowDownRight className="w-2 h-2" />
             <span>-4.2% optimized</span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-rose-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+          className="bg-white/5 rounded-[2.5rem] p-6 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-500/20 transition-all duration-700" />
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Saldo Líquido</h3>
-            <div className={`p-3 rounded-2xl border ${balance >= 0 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
-              <Wallet className="w-5 h-5" />
+            <div className={`p-2 rounded-xl border ${balance >= 0 ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' : 'bg-orange-500/10 text-orange-400 border-orange-500/20'}`}>
+              <Wallet className="w-4 h-4" />
             </div>
           </div>
-          <p className={`text-4xl font-black tracking-tighter mb-2 ${balance >= 0 ? 'text-white' : 'text-orange-400'}`}>
+          <p className={`text-2xl font-black tracking-tighter mb-2 ${balance >= 0 ? 'text-white' : 'text-orange-400'}`}>
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(balance)}
           </p>
-          <div className="flex items-center gap-2 text-white/20 text-[10px] font-bold uppercase tracking-widest">
-            <ShieldCheck className="w-3 h-3" />
+          <div className="flex items-center gap-2 text-white/20 text-[8px] font-bold uppercase tracking-widest">
+            <ShieldCheck className="w-2 h-2" />
             <span>Healthy Cashflow</span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+          className="bg-white/5 rounded-[2.5rem] p-6 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/20 transition-all duration-700" />
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Margem Operacional</h3>
-            <div className="p-3 bg-emerald-500/10 text-emerald-400 rounded-2xl border border-emerald-500/20">
-              <BarChart3 className="w-5 h-5" />
+            <div className="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+              <BarChart3 className="w-4 h-4" />
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            <div className="relative w-24 h-24">
+          <div className="flex items-center gap-4">
+            <div className="relative w-16 h-16">
               <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
                 <circle
                   cx="50"
@@ -497,47 +579,101 @@ export default function Financial() {
                   transition={{ duration: 2, ease: "easeOut" }}
                   strokeLinecap="round"
                 />
-                <defs>
-                  <linearGradient id="emeraldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#34d399" />
-                  </linearGradient>
-                </defs>
               </svg>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-xl font-black text-white">{profitMargin.toFixed(0)}%</span>
+                <span className="text-sm font-black text-white">{profitMargin.toFixed(0)}%</span>
               </div>
             </div>
             <div>
-              <p className="text-xs font-black text-white/40 uppercase tracking-widest mb-1">Status</p>
-              <p className="text-sm font-bold text-emerald-400 uppercase tracking-tighter">Excelente</p>
+              <p className="text-[8px] font-black text-white/40 uppercase tracking-widest mb-0.5">Status</p>
+              <p className="text-xs font-bold text-emerald-400 uppercase tracking-tighter">Excelente</p>
             </div>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </motion.div>
 
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
+          className="bg-white/5 rounded-[2.5rem] p-6 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group"
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-cyan-500/20 transition-all duration-700" />
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Contas a Receber</h3>
-            <div className="p-3 bg-cyan-500/10 text-cyan-400 rounded-2xl border border-cyan-500/20">
-              <TrendingUp className="w-5 h-5" />
+            <div className="p-2 bg-cyan-500/10 text-cyan-400 rounded-xl border border-cyan-500/20">
+              <TrendingUp className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-4xl font-black tracking-tighter mb-2 text-white">
+          <p className="text-2xl font-black tracking-tighter mb-2 text-white">
             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(accountsReceivable)}
           </p>
-          <div className="flex items-center gap-2 text-cyan-400/60 text-[10px] font-bold uppercase tracking-widest">
-            <ArrowUpRight className="w-3 h-3" />
+          <div className="flex items-center gap-2 text-cyan-400/60 text-[8px] font-bold uppercase tracking-widest">
+            <ArrowUpRight className="w-2 h-2" />
             <span>Previsão de entrada</span>
           </div>
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
         </motion.div>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          whileHover={{ y: -5, scale: 1.02 }}
+          className="bg-white/5 rounded-[2.5rem] p-6 border border-white/10 shadow-2xl backdrop-blur-3xl relative overflow-hidden group cursor-pointer"
+          onClick={() => {
+            const element = document.getElementById('metas-section');
+            element?.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 blur-[50px] rounded-full -translate-y-1/2 translate-x-1/2 group-hover:bg-amber-500/20 transition-all duration-700" />
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-white/30 font-black uppercase tracking-[0.2em] text-[10px]">Metas Ativas</h3>
+            <div className="p-2 bg-amber-500/10 text-amber-400 rounded-xl border border-amber-500/20">
+              <Target className="w-4 h-4" />
+            </div>
+          </div>
+          <p className="text-2xl font-black tracking-tighter mb-2 text-white">
+            {savingsGoals.length}
+          </p>
+          <div className="space-y-2">
+            <div className="flex justify-between text-[8px] font-bold text-white/40 uppercase tracking-wider">
+              <span>Progresso</span>
+              <span>{Math.round((savingsGoals.reduce((acc, g) => acc + g.currentAmount, 0) / (savingsGoals.reduce((acc, g) => acc + g.targetAmount, 0) || 1)) * 100)}%</span>
+            </div>
+            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-amber-500 rounded-full shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                style={{ width: `${Math.round((savingsGoals.reduce((acc, g) => acc + g.currentAmount, 0) / (savingsGoals.reduce((acc, g) => acc + g.targetAmount, 0) || 1)) * 100)}%` }}
+              />
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Metas e Projetos Section */}
+      <div id="metas-section" className="relative z-10 scroll-mt-8 mb-16">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-amber-500/20 rounded-2xl border border-amber-500/30">
+              <Target className="w-6 h-6 text-amber-400" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-white tracking-tight">Metas e Projetos</h2>
+              <p className="text-sm text-white/40 font-medium">Acompanhe seus objetivos financeiros de longo prazo.</p>
+            </div>
+          </div>
+          <motion.button 
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsAddingGoal(true)}
+            className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 px-8 py-4 rounded-2xl flex items-center gap-3 border border-amber-500/30 transition-all font-black uppercase text-xs tracking-widest shadow-lg shadow-amber-500/10"
+          >
+            <Plus className="w-5 h-5" />
+            Nova Meta
+          </motion.button>
+        </div>
+        <div className="bg-white/5 backdrop-blur-3xl rounded-[2.5rem] p-8 border border-white/10 shadow-2xl">
+          <SavingsMirror goals={savingsGoals} showAll={true} />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 relative z-10">
@@ -902,6 +1038,108 @@ export default function Financial() {
         </div>
       )}
 
+      {/* Goals Section - Integrated into Financial View */}
+      <div className="relative z-10 mb-16">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h2 className="text-3xl font-black text-white tracking-tighter">Metas e Projetos</h2>
+            <p className="text-white/40 text-sm font-medium mt-1">Acompanhamento de objetivos financeiros.</p>
+          </div>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setIsAddingGoal(true)}
+            className="p-3 bg-white/5 border border-white/10 rounded-2xl text-white/40 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all"
+          >
+            <Plus className="w-5 h-5" />
+          </motion.button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {savingsGoals.map((goal, index) => {
+            const progress = Math.min(100, (goal.currentAmount / goal.targetAmount) * 100);
+            return (
+              <motion.div
+                key={goal.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white/5 rounded-[2.5rem] p-8 border border-white/10 shadow-2xl backdrop-blur-3xl relative group overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <Target className="w-24 h-24" />
+                </div>
+
+                <div className="flex justify-between items-start mb-8 relative z-10">
+                  <div className="p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <Target className="w-6 h-6" />
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => handleEdit('goal', goal.id)}
+                      className="p-3 text-white/20 hover:text-cyan-400 hover:bg-cyan-500/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Plus className="w-5 h-5 rotate-45" />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete('goal', goal.id)}
+                      className="p-3 text-white/20 hover:text-rose-400 hover:bg-rose-500/20 rounded-xl transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                <h3 className="text-xl font-black text-white mb-2 relative z-10">{goal.title}</h3>
+                <p className="text-white/40 text-[10px] font-black uppercase tracking-widest mb-6 relative z-10">{goal.category}</p>
+
+                <div className="space-y-4 relative z-10">
+                  <div className="flex justify-between items-end">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Progresso</span>
+                      <span className="text-2xl font-black text-white">{progress.toFixed(1)}%</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                      <span className="text-[10px] font-black text-white/20 uppercase tracking-widest">Alvo</span>
+                      <span className="text-sm font-bold text-white/60">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(goal.targetAmount)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden p-0.5 border border-white/5">
+                    <motion.div 
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 1, ease: "easeOut" }}
+                      className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.4)]"
+                    />
+                  </div>
+
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-white/30 pt-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3 h-3" />
+                      <span>{goal.deadline ? new Date(goal.deadline).toLocaleDateString('pt-BR') : 'Sem prazo'}</span>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full border ${goal.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
+                      {goal.status === 'COMPLETED' ? 'Concluído' : 'Em Andamento'}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            );
+          })}
+
+          {savingsGoals.length === 0 && (
+            <div className="col-span-full py-20 text-center bg-white/5 rounded-[3rem] border border-dashed border-white/10 backdrop-blur-3xl">
+              <Target className="w-12 h-12 text-white/10 mx-auto mb-6" />
+              <h3 className="text-2xl font-black text-white/20 tracking-tighter">Nenhuma meta definida</h3>
+              <p className="text-white/10 mt-2 font-bold uppercase tracking-widest text-[10px]">Defina seus objetivos financeiros para começar a poupar.</p>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Transactions List - High Fidelity */}
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-12">
@@ -982,85 +1220,158 @@ export default function Financial() {
         </div>
       </div>
 
-      {/* Edit Transaction Modal */}
+      {/* Edit Transaction/Goal Modal */}
       <Modal 
         isOpen={!!editingTransaction} 
         onClose={() => setEditingTransaction(null)} 
-        title={`Editar ${editingTransaction?.type === 'cost' ? 'Custo' : 'Receita'}`}
+        title={`Editar ${editingTransaction?.type === 'cost' ? 'Custo' : editingTransaction?.type === 'income' ? 'Receita' : 'Meta'}`}
         maxWidth="sm"
         glass={true}
       >
         <form onSubmit={(e) => { e.preventDefault(); handleUpdate(); }} className="space-y-6 p-2">
-          {editingTransaction?.type === 'income' && (
-            <div>
-              <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Cliente *</label>
-              <select 
-                value={clientId}
-                onChange={(e) => setClientId(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
-                required
-              >
-                <option value="" className="bg-[#004a7c]">Selecione um cliente</option>
-                {clients.map(c => (
-                  <option key={c.id} value={c.id} className="bg-[#004a7c]">{c.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
+          {editingTransaction?.type === 'goal' ? (
+            <>
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Título da Meta *</label>
+                <input 
+                  type="text" 
+                  value={goalTitle}
+                  onChange={(e) => setGoalTitle(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white placeholder:text-white/30"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor Alvo *</label>
+                  <input 
+                    type="number" 
+                    value={goalTarget || ''}
+                    onChange={(e) => setGoalTarget(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor Atual</label>
+                  <input 
+                    type="number" 
+                    value={goalCurrent || ''}
+                    onChange={(e) => setGoalCurrent(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Prazo</label>
+                <input 
+                  type="date" 
+                  value={goalDeadline}
+                  onChange={(e) => setGoalDeadline(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white [color-scheme:dark]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Categoria</label>
+                <select 
+                  value={goalCategory}
+                  onChange={(e) => setGoalCategory(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+                >
+                  <option value="Reserva" className="bg-[#004a7c]">Reserva</option>
+                  <option value="Investimento" className="bg-[#004a7c]">Investimento</option>
+                  <option value="Projeto" className="bg-[#004a7c]">Projeto</option>
+                  <option value="Viagem" className="bg-[#004a7c]">Viagem</option>
+                  <option value="Outros" className="bg-[#004a7c]">Outros</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Status</label>
+                <select 
+                  value={goalStatus}
+                  onChange={(e) => setGoalStatus(e.target.value as any)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+                >
+                  <option value="IN_PROGRESS" className="bg-[#004a7c]">Em Andamento</option>
+                  <option value="COMPLETED" className="bg-[#004a7c]">Concluído</option>
+                  <option value="CANCELLED" className="bg-[#004a7c]">Cancelado</option>
+                </select>
+              </div>
+            </>
+          ) : (
+            <>
+              {editingTransaction?.type === 'income' && (
+                <div>
+                  <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Cliente *</label>
+                  <select 
+                    value={clientId}
+                    onChange={(e) => setClientId(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+                    required
+                  >
+                    <option value="" className="bg-[#004a7c]">Selecione um cliente</option>
+                    {clients.map(c => (
+                      <option key={c.id} value={c.id} className="bg-[#004a7c]">{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Descrição *</label>
-            <input 
-              type="text" 
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white placeholder:text-white/30"
-              required
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Descrição *</label>
+                <input 
+                  type="text" 
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white placeholder:text-white/30"
+                  required
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor (R$) *</label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
-              <input 
-                type="number" 
-                value={value || ''}
-                onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
-                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
-                min="0.01"
-                step="0.01"
-                required
-              />
-            </div>
-          </div>
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor (R$) *</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+                  <input 
+                    type="number" 
+                    value={value || ''}
+                    onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                    min="0.01"
+                    step="0.01"
+                    required
+                  />
+                </div>
+              </div>
 
-          <div>
-            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Data *</label>
-            <input 
-              type="date" 
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white [color-scheme:dark]"
-              required
-            />
-          </div>
+              <div>
+                <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Data *</label>
+                <input 
+                  type="date" 
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white [color-scheme:dark]"
+                  required
+                />
+              </div>
 
-          {editingTransaction?.type === 'cost' && (
-            <div>
-              <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Categoria</label>
-              <select 
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
-              >
-                <option value="Material" className="bg-[#004a7c]">Material</option>
-                <option value="Combustível" className="bg-[#004a7c]">Combustível</option>
-                <option value="Alimentação" className="bg-[#004a7c]">Alimentação</option>
-                <option value="Ferramentas" className="bg-[#004a7c]">Ferramentas</option>
-                <option value="Outros" className="bg-[#004a7c]">Outros</option>
-              </select>
-            </div>
+              {editingTransaction?.type === 'cost' && (
+                <div>
+                  <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Categoria</label>
+                  <select 
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+                  >
+                    <option value="Material" className="bg-[#004a7c]">Material</option>
+                    <option value="Combustível" className="bg-[#004a7c]">Combustível</option>
+                    <option value="Alimentação" className="bg-[#004a7c]">Alimentação</option>
+                    <option value="Ferramentas" className="bg-[#004a7c]">Ferramentas</option>
+                    <option value="Outros" className="bg-[#004a7c]">Outros</option>
+                  </select>
+                </div>
+              )}
+            </>
           )}
 
           <div className="pt-6 flex justify-end gap-3">
@@ -1076,6 +1387,102 @@ export default function Financial() {
               className="bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 px-10 py-3 rounded-xl font-bold border border-cyan-500/30 transition-all active:scale-95 shadow-lg backdrop-blur-md"
             >
               Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Add Goal Modal */}
+      <Modal 
+        isOpen={isAddingGoal} 
+        onClose={() => setIsAddingGoal(false)} 
+        title="Adicionar Nova Meta"
+        maxWidth="sm"
+        glass={true}
+      >
+        <form onSubmit={handleAddGoal} className="space-y-6 p-2">
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Título da Meta *</label>
+            <input 
+              type="text" 
+              value={goalTitle}
+              onChange={(e) => setGoalTitle(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white placeholder:text-white/30"
+              placeholder="Ex: Reserva de Emergência"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor Alvo *</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+                <input 
+                  type="number" 
+                  value={goalTarget || ''}
+                  onChange={(e) => setGoalTarget(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                  min="0.01"
+                  step="0.01"
+                  required
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Valor Inicial</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 font-bold">R$</span>
+                <input 
+                  type="number" 
+                  value={goalCurrent || ''}
+                  onChange={(e) => setGoalCurrent(parseFloat(e.target.value) || 0)}
+                  className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl pl-12 pr-4 py-3 outline-none transition-all text-white"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Prazo (Opcional)</label>
+            <input 
+              type="date" 
+              value={goalDeadline}
+              onChange={(e) => setGoalDeadline(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white [color-scheme:dark]"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-bold uppercase tracking-wider text-white/60 mb-2">Categoria</label>
+            <select 
+              value={goalCategory}
+              onChange={(e) => setGoalCategory(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 focus:border-white/30 rounded-xl px-4 py-3 outline-none transition-all text-white appearance-none cursor-pointer"
+            >
+              <option value="Reserva" className="bg-[#004a7c]">Reserva</option>
+              <option value="Investimento" className="bg-[#004a7c]">Investimento</option>
+              <option value="Projeto" className="bg-[#004a7c]">Projeto</option>
+              <option value="Viagem" className="bg-[#004a7c]">Viagem</option>
+              <option value="Outros" className="bg-[#004a7c]">Outros</option>
+            </select>
+          </div>
+
+          <div className="pt-6 flex justify-end gap-3">
+            <button 
+              type="button"
+              onClick={() => setIsAddingGoal(false)}
+              className="px-6 py-3 text-white/60 hover:text-white transition-colors font-medium"
+            >
+              Cancelar
+            </button>
+            <button 
+              type="submit"
+              className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 px-10 py-3 rounded-xl font-bold border border-emerald-500/30 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+            >
+              CRIAR META
             </button>
           </div>
         </form>

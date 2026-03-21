@@ -51,8 +51,8 @@ const MonthDateHeader = ({ label, date, onDrillDown }: any) => {
         className={`
           w-8 h-8 flex items-center justify-center rounded-xl text-xs font-bold transition-all
           ${isToday 
-            ? 'bg-zinc-900 text-white shadow-lg scale-110' 
-            : 'hover:bg-zinc-100 text-zinc-800 hover:text-zinc-900'}
+            ? 'bg-blue-500 text-white shadow-[0_0_20px_rgba(59,130,246,0.5)] scale-110' 
+            : 'hover:bg-white/10 text-white/60 hover:text-white'}
         `}
       >
         {label}
@@ -78,45 +78,45 @@ const CustomToolbar = (toolbar: any) => {
 
   return (
     <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-12">
-      <div className="flex items-center gap-4 bg-zinc-100 p-1.5 rounded-2xl">
+      <div className="flex items-center gap-4 bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
         <button
           type="button"
           onClick={goToBack}
-          className="p-3 hover:bg-white hover:shadow-sm rounded-xl transition-all text-zinc-500 hover:text-zinc-900"
+          className="p-3 hover:bg-white/10 rounded-xl transition-all text-white/40 hover:text-white"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
         <button
           type="button"
           onClick={goToToday}
-          className="px-6 py-2.5 bg-white shadow-sm rounded-xl text-sm font-black text-zinc-900 uppercase tracking-widest transition-all active:scale-95"
+          className="px-6 py-2.5 bg-white/10 hover:bg-white/20 rounded-xl text-xs font-black text-white uppercase tracking-[0.2em] transition-all active:scale-95 border border-white/10"
         >
           Hoje
         </button>
         <button
           type="button"
           onClick={goToNext}
-          className="p-3 hover:bg-white hover:shadow-sm rounded-xl transition-all text-zinc-500 hover:text-zinc-900"
+          className="p-3 hover:bg-white/10 rounded-xl transition-all text-white/40 hover:text-white"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="text-3xl font-light text-zinc-900 lowercase tracking-tight">
+      <div className="text-3xl font-light text-white lowercase tracking-tight">
         {toolbar.label}
       </div>
 
-      <div className="flex items-center gap-2 bg-zinc-100 p-1.5 rounded-2xl">
+      <div className="flex items-center gap-2 bg-white/5 p-1.5 rounded-2xl border border-white/10 backdrop-blur-md">
         {['month', 'week', 'day', 'agenda'].map((view) => (
           <button
             key={view}
             type="button"
             onClick={() => toggleView(view)}
             className={`
-              px-6 py-2.5 rounded-xl text-[0.7rem] font-black uppercase tracking-[0.15em] transition-all
+              px-6 py-2.5 rounded-xl text-[0.65rem] font-black uppercase tracking-[0.15em] transition-all
               ${toolbar.view === view 
-                ? 'bg-zinc-900 text-white shadow-lg' 
-                : 'text-zinc-400 hover:text-zinc-600 hover:bg-white/50'}
+                ? 'bg-white/20 text-white shadow-xl border border-white/20' 
+                : 'text-white/30 hover:text-white/60 hover:bg-white/5'}
             `}
           >
             {view === 'month' ? 'Mês' : 
@@ -206,93 +206,107 @@ export default function Calendar() {
   };
 
   const eventStyleGetter = (event: any) => {
-    let backgroundColor = 'rgba(24, 24, 27, 0.8)'; // zinc-900 for meetings
-    let border = '1px solid rgba(24, 24, 27, 0.9)';
-    let glow = '0 0 15px rgba(24, 24, 27, 0.2)';
+    let backgroundColor = 'rgba(255, 255, 255, 0.1)';
+    let border = '1px solid rgba(255, 255, 255, 0.2)';
+    let glow = '0 0 15px rgba(255, 255, 255, 0.1)';
     
     if (event.resource.type === 'TICKET') {
-      backgroundColor = '#2563eb'; // Blue-600 for high visibility
-      border = '2px solid #1d4ed8';
-      glow = '0 4px 12px rgba(37, 99, 235, 0.4)';
+      backgroundColor = 'rgba(59, 130, 246, 0.4)'; // Blue-500 with transparency
+      border = '1px solid rgba(59, 130, 246, 0.5)';
+      glow = '0 4px 12px rgba(37, 99, 235, 0.3)';
+    } else if (event.resource.type === 'MEETING') {
+      backgroundColor = 'rgba(16, 185, 129, 0.4)'; // Emerald-500
+      border = '1px solid rgba(16, 185, 129, 0.5)';
+      glow = '0 4px 12px rgba(16, 185, 129, 0.3)';
     } else if (event.resource.type === 'OTHER') {
-      backgroundColor = 'rgba(113, 113, 122, 0.8)'; // zinc-500 for other
-      border = '1px solid rgba(113, 113, 122, 0.9)';
-      glow = '0 0 15px rgba(113, 113, 122, 0.2)';
+      backgroundColor = 'rgba(168, 85, 247, 0.4)'; // Purple-500
+      border = '1px solid rgba(168, 85, 247, 0.5)';
+      glow = '0 4px 12px rgba(168, 85, 247, 0.3)';
     }
 
     return {
       style: {
         backgroundColor,
-        borderRadius: '12px',
+        borderRadius: '10px',
         opacity: 1,
         color: 'white',
         border,
         display: 'block',
-        fontWeight: '700',
-        padding: '6px 10px',
-        fontSize: '0.8rem',
-        backdropFilter: 'blur(8px)',
+        fontWeight: '600',
+        padding: '4px 8px',
+        fontSize: '0.75rem',
+        backdropFilter: 'blur(12px)',
         boxShadow: glow,
-        transition: 'all 0.2s ease'
+        transition: 'all 0.2s ease',
+        textShadow: '0 1px 2px rgba(0,0,0,0.2)'
       }
     };
   };
 
   return (
-    <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-8 md:p-12 overflow-x-hidden relative flex flex-col">
-      {/* Background Decorative Elements */}
-      <div className="absolute inset-0 opacity-10 pointer-events-none overflow-hidden">
-        <svg className="w-full h-full" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
-          <path d="M0,1000 C300,800 400,900 1000,600 L1000,1000 L0,1000 Z" fill="currentColor" className="text-white/5" fillOpacity="0.5" />
-          <path d="M0,800 C200,600 500,700 1000,400 L1000,800 L0,800 Z" fill="currentColor" className="text-white/10" fillOpacity="0.5" />
-        </svg>
-      </div>
+    <div 
+      className="min-h-screen bg-cover bg-center relative flex items-center justify-center p-4 md:p-12 font-sans -m-8"
+      style={{ backgroundImage: 'url("https://images.unsplash.com/photo-1506784911079-5097f60bc8f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80")' }}
+    >
+      {/* Heavy blur overlay for the background */}
+      <div className="absolute inset-0 bg-[#0a192f]/60 backdrop-blur-xl" />
 
-      <header className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-6 relative z-10 shrink-0">
-        <div className="flex items-center gap-6">
-          <BackButton />
-          <div>
-            <h1 className="text-6xl font-light tracking-tight text-white">Agenda</h1>
-            <p className="text-xl text-white/60 mt-2 font-light">Compromissos e Ordens de Serviço</p>
-          </div>
-        </div>
+      {/* Main Container - Plastic Transparent Frosted Glass */}
+      <div className="relative z-10 w-full max-w-[1400px] bg-gradient-to-br from-[#1a2b4c]/90 to-[#0f172a]/90 backdrop-blur-2xl border border-white/20 rounded-[2rem] shadow-[0_0_50px_rgba(0,0,0,0.5)] p-6 md:p-10 flex flex-col gap-8 overflow-hidden">
         
-        <motion.button 
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => {
-            setStartDate(new Date().toISOString().split('T')[0] + 'T09:00');
-            setEndDate(new Date().toISOString().split('T')[0] + 'T10:00');
-            setIsAdding(true);
-            setSelectedEvent(null);
-          }}
-          className="bg-white/10 hover:bg-white/20 text-white px-10 py-5 flex items-center gap-3 border border-white/20 backdrop-blur-md transition-all rounded-2xl shadow-2xl font-bold tracking-widest uppercase text-sm"
-        >
-          <Plus className="w-6 h-6" /> 
-          Novo Compromisso
-        </motion.button>
-      </header>
+        {/* Subtle inner glow */}
+        <div className="absolute inset-0 rounded-[2rem] shadow-[inset_0_0_30px_rgba(255,255,255,0.05)] pointer-events-none" />
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex-1 bg-zinc-50 rounded-[2.5rem] border border-zinc-200 p-10 shadow-sm relative z-10 overflow-hidden flex flex-col"
-      >
+        <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 relative z-10 border-b border-white/10 pb-8">
+          <div className="flex items-center gap-8">
+            <BackButton className="!bg-white/5 !border-white/5 !rounded-3xl hover:!bg-white/10" />
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse shadow-[0_0_10px_rgba(96,165,250,0.8)]" />
+                <span className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-400/60">Intelligent Scheduling</span>
+              </div>
+              <h1 className="text-5xl md:text-6xl font-black tracking-tighter text-white leading-none">Agenda</h1>
+              <p className="text-lg text-white/40 mt-3 font-light max-w-md leading-relaxed">Compromissos e Ordens de Serviço sincronizados em tempo real.</p>
+            </div>
+          </div>
+          
+          <motion.button 
+            whileHover={{ scale: 1.02, y: -2 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={() => {
+              setStartDate(new Date().toISOString().split('T')[0] + 'T09:00');
+              setEndDate(new Date().toISOString().split('T')[0] + 'T10:00');
+              setIsAdding(true);
+              setSelectedEvent(null);
+            }}
+            className="bg-white/10 hover:bg-white/20 text-white px-10 py-5 flex items-center gap-3 border border-white/20 backdrop-blur-md transition-all rounded-2xl shadow-2xl font-black tracking-widest uppercase text-xs"
+          >
+            <Plus className="w-6 h-6" /> 
+            Novo Compromisso
+          </motion.button>
+        </header>
+
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex-1 min-h-[700px] relative z-10 flex flex-col"
+        >
         <style>{`
-          .rbc-calendar { font-family: 'Inter', system-ui, sans-serif; border: none; color: #18181b; }
+          .rbc-calendar { font-family: 'Inter', system-ui, sans-serif; border: none; color: white; }
           .rbc-month-view, .rbc-time-view, .rbc-header { border: none !important; }
           .rbc-month-view { 
-            background: white !important; 
+            background: rgba(255, 255, 255, 0.03) !important; 
             border-radius: 30px !important; 
-            border: 1px solid #e4e4e7 !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
             overflow: hidden !important;
             display: flex !important;
             flex-direction: column !important;
             flex: 1 !important;
             width: 100% !important;
+            backdrop-filter: blur(10px);
           }
           .rbc-month-row { 
-            border-top: 1px solid #f4f4f5 !important;
+            border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
             flex: 1 !important;
             display: flex !important;
             flex-direction: column !important;
@@ -301,27 +315,27 @@ export default function Calendar() {
             border-top: none !important;
           }
           .rbc-day-bg { 
-            border-left: 1px solid #f4f4f5 !important; 
-            background: #fafafa !important;
+            border-left: 1px solid rgba(255, 255, 255, 0.05) !important; 
+            background: transparent !important;
           }
           .rbc-day-bg:first-of-type {
             border-left: none !important;
           }
           .rbc-day-bg:hover { 
-            background: #fdfdfd !important;
+            background: rgba(255, 255, 255, 0.02) !important;
           }
-          .rbc-today { background-color: #f0f9ff !important; }
+          .rbc-today { background-color: rgba(59, 130, 246, 0.1) !important; }
           
           .rbc-header { 
-            padding: 12px 0 !important; 
+            padding: 16px 0 !important; 
             font-size: 0.7rem !important; 
             font-weight: 800 !important; 
-            color: #71717a !important;
-            background: #f8fafc !important;
-            border-left: 1px solid #f1f5f9 !important;
-            border-bottom: 1px solid #f1f5f9 !important;
+            color: rgba(255, 255, 255, 0.5) !important;
+            background: rgba(255, 255, 255, 0.02) !important;
+            border-left: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
             text-transform: uppercase;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.15em;
           }
           .rbc-header:first-of-type {
             border-left: none !important;
@@ -329,13 +343,14 @@ export default function Calendar() {
           
           .rbc-month-header { border: none !important; }
           .rbc-date-cell { 
-            padding: 8px !important; 
+            padding: 12px !important; 
             font-size: 0.85rem !important; 
             font-weight: 700 !important;
-            color: #3f3f46 !important;
+            color: rgba(255, 255, 255, 0.8) !important;
           }
-          .rbc-off-range { opacity: 0.3 !important; }
-          .rbc-off-range-bg { background: #f4f4f5 !important; }
+          .rbc-off-range { opacity: 0.2 !important; }
+          .rbc-off-range-bg { background: rgba(0, 0, 0, 0.1) !important; }
+          .rbc-today .rbc-date-cell { color: #3b82f6 !important; }
 
           .rbc-toolbar { display: none !important; }
           
@@ -349,30 +364,43 @@ export default function Calendar() {
           .rbc-show-more { 
             font-weight: 900 !important; 
             font-size: 0.65rem !important; 
-            color: #2563eb !important; 
-            background: #eff6ff !important;
+            color: #3b82f6 !important; 
+            background: rgba(59, 130, 246, 0.1) !important;
             padding: 4px 10px !important;
             border-radius: 10px !important;
             margin-left: 8px !important;
             text-transform: uppercase;
+            border: 1px solid rgba(59, 130, 246, 0.2);
           }
 
           .rbc-time-view { 
             border-radius: 40px; 
             overflow: hidden; 
             border: none; 
-            background: white; 
+            background: rgba(255, 255, 255, 0.03); 
             padding: 20px;
+            backdrop-filter: blur(10px);
           }
           
-          .rbc-time-header { border-bottom: 1px solid #f4f4f5 !important; }
+          .rbc-time-header { border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; }
           .rbc-time-content { border: none !important; }
-          .rbc-timeslot-group { border-bottom: 1px solid #fafafa !important; min-height: 100px; }
+          .rbc-timeslot-group { border-bottom: 1px solid rgba(255, 255, 255, 0.02) !important; min-height: 100px; }
           .rbc-time-slot { border: none !important; }
-          .rbc-day-slot { border-left: 1px solid #f4f4f5 !important; }
+          .rbc-day-slot { border-left: 1px solid rgba(255, 255, 255, 0.05) !important; }
           
-          .rbc-off-range-bg { background-color: #fafafa !important; opacity: 0.5; }
-          .rbc-label { color: #a1a1aa !important; font-size: 0.7rem !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: 0.1em; }
+          .rbc-label { color: rgba(255, 255, 255, 0.4) !important; font-size: 0.7rem !important; font-weight: 800 !important; text-transform: uppercase; letter-spacing: 0.1em; }
+          
+          .rbc-agenda-view {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border-radius: 30px !important;
+            overflow: hidden !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          }
+          .rbc-agenda-table { color: white !important; }
+          .rbc-agenda-table thead > tr > th { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; color: rgba(255, 255, 255, 0.5) !important; padding: 15px !important; }
+          .rbc-agenda-table tbody > tr > td { border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important; padding: 15px !important; }
+          .rbc-overlay { background: rgba(15, 15, 15, 0.95) !important; backdrop-filter: blur(20px) !important; border: 1px solid rgba(255, 255, 255, 0.1) !important; border-radius: 20px !important; padding: 15px !important; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5) !important; z-index: 1000 !important; }
+          .rbc-overlay-header { border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important; margin-bottom: 10px !important; padding-bottom: 5px !important; font-weight: bold !important; color: white !important; }
         `}</style>
         <BigCalendar
           localizer={localizer}
@@ -526,9 +554,9 @@ export default function Calendar() {
           <div className="space-y-10">
             <div className="flex items-start gap-6">
               <div className={`p-5 rounded-[2rem] shrink-0 shadow-2xl ${
-                selectedEvent.resource.type === 'TICKET' ? 'bg-zinc-900/20 text-zinc-900 border border-zinc-900/30' :
-                selectedEvent.resource.type === 'MEETING' ? 'bg-zinc-900/20 text-zinc-900 border border-zinc-900/30' :
-                'bg-zinc-500/20 text-zinc-500 border border-zinc-500/30'
+                selectedEvent.resource.type === 'TICKET' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
+                selectedEvent.resource.type === 'MEETING' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' :
+                'bg-purple-500/20 text-purple-400 border border-purple-500/30'
               }`}>
                 <CalendarIcon className="w-10 h-10" />
               </div>
@@ -589,7 +617,7 @@ export default function Calendar() {
               {selectedEvent.resource.type === 'TICKET' && (
                 <button 
                   onClick={() => navigate(`/tickets/${selectedEvent.resource.originalId}`)}
-                  className="px-8 py-4 bg-zinc-900/10 text-zinc-900 hover:bg-zinc-900/20 rounded-2xl font-black tracking-widest uppercase text-xs border border-zinc-900/20 transition-all"
+                  className="px-8 py-4 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-2xl font-black tracking-widest uppercase text-xs border border-blue-500/20 transition-all"
                 >
                   VER ORDEM
                 </button>
@@ -604,6 +632,7 @@ export default function Calendar() {
           </div>
         )}
       </Modal>
+      </div>
     </div>
   );
 }
