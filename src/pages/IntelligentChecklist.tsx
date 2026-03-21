@@ -183,7 +183,7 @@ export default function IntelligentChecklist() {
     toast.success('Cronograma gerado com sucesso!');
     addNotification({
       title: 'Cronograma Gerado',
-      message: `Cronograma NBR 5674 gerado com sucesso para ${selectedClient?.name}.`,
+      message: `Cronograma de Manutenção preventiva gerado com sucesso para ${selectedClient?.name}.`,
       type: 'SUCCESS'
     });
   };
@@ -751,7 +751,7 @@ export default function IntelligentChecklist() {
           <div className="mt-auto pt-20 text-center">
             <p className="text-[10px] text-zinc-400 leading-relaxed">
               Documento gerado automaticamente pelo sistema de gestão integrada.<br />
-              A conformidade com a NBR 5674 é de responsabilidade do síndico/gestor.
+              A conformidade com a manutenção preventiva (NBR 5674) é de responsabilidade do síndico/gestor.
             </p>
           </div>
         </div>

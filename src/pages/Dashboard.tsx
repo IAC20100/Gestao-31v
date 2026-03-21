@@ -470,9 +470,9 @@ export default function Dashboard() {
               <ClipboardCheck className="w-6 h-6 md:w-10 md:h-10 text-white" />
             </div>
             <div className="overflow-hidden flex-1">
-              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Manutenção Preventiva</p>
+              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/70 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Norma Técnica NBR 5674</p>
               <div className="space-y-0.5 md:space-y-1">
-                <p className="font-black text-xs md:text-xl truncate text-white leading-tight">NBR 5674</p>
+                <p className="font-black text-xs md:text-xl truncate text-white leading-tight">Manutenção preventiva</p>
                 <div className="flex items-center gap-1.5 md:gap-2">
                   <div className="flex-1 h-1 md:h-1.5 bg-white/20 rounded-full overflow-hidden max-w-[60px] md:max-w-[100px]">
                     <div 
@@ -708,57 +708,6 @@ export default function Dashboard() {
           </div>
           <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/70">Materiais</span>
         </Link>
-      )
-    },
-    {
-      id: 'accountability',
-      type: 'wide',
-      component: (
-        <div 
-          onClick={() => navigate('/accountability')}
-          className="w-full h-full bg-gradient-to-br from-[#4e44ce] to-[#3b3399] hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] active:scale-95 cursor-pointer"
-        >
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          
-          <div className="flex-1 flex items-center justify-center relative z-10 overflow-hidden">
-            <CostsMirror 
-              costs={costs} 
-              className="!p-0 !bg-transparent !border-none !shadow-none !rounded-none w-full max-w-[260px]" 
-              hideFooter={true}
-            />
-          </div>
-
-          <div className="flex justify-between items-end relative z-10 mt-2">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-white/20 rounded-xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500">
-                <BarChart3 className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] drop-shadow-md">Central de Custos</span>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-[8px] font-bold text-white/50 uppercase tracking-widest">Fluxo em tempo real</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-              <Link 
-                to="/receipts" 
-                className="flex items-center gap-1.5 bg-emerald-500/20 hover:bg-emerald-500/40 px-2 py-1 rounded-lg border border-emerald-500/30 transition-colors group/btn"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Plus className="w-3 h-3 text-emerald-400 group-hover/btn:rotate-90 transition-transform" />
-                <span className="text-[9px] font-black uppercase text-emerald-400">Adicionar Receita</span>
-              </Link>
-              <div className="flex flex-col items-end">
-                <p className="text-[8px] font-black uppercase text-white/50 mb-0.5">Inadimplência</p>
-                <div className="bg-black/20 px-3 py-1 rounded-full border border-white/10 backdrop-blur-md">
-                  <span className="text-sm font-black drop-shadow-lg text-white">R$ {totalDelinquency.toLocaleString('pt-BR')}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       )
     },
     {

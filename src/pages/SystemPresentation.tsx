@@ -38,7 +38,7 @@ const SLIDES = [
   {
     id: 'maintenance',
     title: 'Manutenção Inteligente',
-    subtitle: 'Conformidade com a NBR 5674',
+    subtitle: 'Manutenção Preventiva (NBR 5674)',
     content: 'O síndico não precisa mais decorar prazos. O sistema gera automaticamente o cronograma preventivo, garantindo a vida útil do patrimônio e a segurança dos moradores.',
     icon: <Hammer className="w-12 h-12 text-red-500" />,
     image: 'https://images.unsplash.com/photo-1581094794329-c8112a89af12?auto=format&fit=crop&q=80&w=2070',
