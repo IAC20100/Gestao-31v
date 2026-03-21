@@ -3,7 +3,7 @@ import { useStore } from '../store';
 import { Download, Printer, Edit, CheckCircle2, XCircle, DollarSign, Camera, MapPin, User, MessageSquare, Plus, QrCode } from 'lucide-react';
 import { BackButton } from '../components/BackButton';
 import { useRef, useState } from 'react';
-import { QRCodeCanvas } from 'qrcode.react';
+import { QRCodeSVG } from 'qrcode.react';
 import { generatePdf } from '../utils/pdfGenerator';
 import { toast } from 'react-hot-toast';
 
@@ -52,6 +52,9 @@ export default function TicketView() {
     const element = printRef.current;
     if (!element) return;
 
+    // Garantir que a página está no topo para evitar problemas de renderização
+    window.scrollTo(0, 0);
+
     setIsGenerating(true);
     try {
       let fileName = '';
@@ -64,9 +67,10 @@ export default function TicketView() {
       }
 
       await generatePdf(element, fileName);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao gerar PDF:', error);
-      alert('Erro ao gerar PDF. Tente usar o botão "Imprimir" no topo da página como alternativa.');
+      const errorMsg = error?.message || 'Erro desconhecido';
+      alert(`Erro ao gerar PDF: ${errorMsg}. Tente usar o botão "Imprimir" no topo da página como alternativa.`);
     } finally {
       setIsGenerating(false);
     }
@@ -169,10 +173,11 @@ export default function TicketView() {
           </div>
         )}
 
-        <div 
-          ref={printRef} 
-          className="bg-white text-zinc-900 rounded-3xl shadow-2xl p-12 print:shadow-none print:p-0 print:w-full print:max-w-[210mm] print:mx-auto print:rounded-none"
-        >
+        <div className="bg-white rounded-3xl shadow-2xl overflow-hidden print:shadow-none print:rounded-none">
+          <div 
+            ref={printRef} 
+            className="bg-white text-zinc-900 p-6 md:p-12 print:p-0 print:w-full print:max-w-[210mm] print:mx-auto"
+          >
         {/* Cabeçalho do Relatório */}
         <div className="border-b border-zinc-200 pb-6 mb-8 flex justify-between items-start break-inside-avoid page-break-inside-avoid">
           <div className="flex items-start gap-6">
@@ -278,7 +283,7 @@ export default function TicketView() {
                 )}
               </div>
               <div className="bg-white p-2 rounded-xl border border-zinc-200 shadow-sm">
-                <QRCodeCanvas 
+                <QRCodeSVG 
                   value={`${window.location.origin}/tickets/${ticket.id}`} 
                   size={64}
                   level="H"
@@ -436,5 +441,6 @@ export default function TicketView() {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 }

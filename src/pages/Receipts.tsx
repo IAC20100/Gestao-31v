@@ -41,6 +41,9 @@ export default function Receipts() {
 
     if (!receiptRef.current) return;
 
+    // Garantir que a página está no topo para evitar problemas de renderização
+    window.scrollTo(0, 0);
+
     setIsGenerating(true);
     try {
       // Save to store
@@ -72,6 +75,10 @@ export default function Receipts() {
 
   const handleDownloadExisting = async (receipt: Receipt) => {
     setDownloadingReceipt(receipt);
+    
+    // Garantir que a página está no topo para evitar problemas de renderização
+    window.scrollTo(0, 0);
+
     setIsGenerating(true);
     
     // Wait for state to update and DOM to render

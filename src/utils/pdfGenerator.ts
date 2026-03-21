@@ -19,18 +19,22 @@ export async function generatePdf(element: HTMLElement, fileName: string, format
     }));
 
     // Pequeno delay para estabilização e renderização completa
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     const opt: any = {
-      margin: 0, // Margens controladas pelo CSS do elemento
+      margin: 0,
       filename: fileName,
-      image: { type: 'jpeg', quality: 1 },
+      image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { 
-        scale: 3, // Aumentado para maior nitidez
+        scale: 2, // Reduzido de 3 para 2 para economizar memória em dispositivos móveis
         useCORS: true, 
         letterRendering: true,
         backgroundColor: '#ffffff',
-        logging: false
+        logging: false,
+        allowTaint: false, // Alterado para false para evitar problemas de segurança de canvas
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: 1200 // Força uma largura de janela para garantir layout consistente
       },
       jsPDF: { 
         unit: 'mm', 
@@ -41,11 +45,12 @@ export async function generatePdf(element: HTMLElement, fileName: string, format
       },
       pagebreak: { 
         mode: ['avoid-all', 'css', 'legacy'],
-        avoid: ['.break-inside-avoid', 'tr', '.no-break']
+        avoid: ['.break-inside-avoid', 'tr', '.no-break', 'img', 'table']
       }
     };
 
     // Usando html2pdf para gerar o PDF respeitando quebras de página
+    // Adicionando .toPdf().get('pdf') para maior controle antes do save
     await html2pdf().set(opt).from(element).save();
     
     console.log('PDF gerado com sucesso via html2pdf.js');

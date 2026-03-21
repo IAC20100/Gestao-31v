@@ -181,6 +181,9 @@ export default function Quotes() {
   };
 
   const handleDownloadPdf = async (quote: Quote) => {
+    // Garantir que a página está no topo para evitar problemas de renderização
+    window.scrollTo(0, 0);
+
     setQuoteToPrint(quote);
     setIsGenerating(true);
     

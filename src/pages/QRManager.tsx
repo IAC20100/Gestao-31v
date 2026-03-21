@@ -101,6 +101,9 @@ export default function QRManager() {
   const handlePrintTemplate = async (locationId: string, locationName: string) => {
     setPrintingLocation({ id: locationId, name: locationName });
     
+    // Garantir que a página está no topo para evitar problemas de renderização
+    window.scrollTo(0, 0);
+
     setTimeout(async () => {
       if (!printRef.current) return;
       
@@ -119,6 +122,9 @@ export default function QRManager() {
 
   const handlePrintAll = async () => {
     if (!selectedClient || !selectedClient.locations || selectedClient.locations.length === 0) return;
+
+    // Garantir que a página está no topo para evitar problemas de renderização
+    window.scrollTo(0, 0);
 
     try {
       toast.loading('Gerando folhas de impressão...', { id: 'printing-all' });

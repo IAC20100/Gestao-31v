@@ -246,6 +246,9 @@ export default function IntelligentChecklist() {
   const handleExportPDF = async () => {
     if (!printRef.current || !selectedClient) return;
     
+    // Garantir que a página está no topo para evitar problemas de renderização
+    window.scrollTo(0, 0);
+
     try {
       toast.loading('Gerando PDF...', { id: 'pdf' });
       await generatePdf(printRef.current, `Manutencao_${selectedClient.name}_${format(new Date(), 'dd_MM_yyyy')}.pdf`);
