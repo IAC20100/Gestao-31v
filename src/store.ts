@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import { v4 as uuidv4 } from 'uuid';
 import { supabase, isSupabaseConfigured, isLocalSupabase } from './lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -12,7 +13,8 @@ import {
 } from './types';
 
 export const useStore = create<AppState>()(
-  (set, get) => ({
+  persist(
+    (set, get) => ({
       clients: [],
       checklistItems: [],
       tickets: [],
@@ -106,6 +108,32 @@ export const useStore = create<AppState>()(
             criticalEventsRes, digitalFolderRes, supplyQuotationsRes, 
             companySettingsRes, notificationsRes, savingsGoalsRes, documentTemplatesRes
           ] = results;
+
+          // If company settings don't exist, create a default row
+          if (companySettingsRes.error && companySettingsRes.error.code === 'PGRST116') {
+            const defaultSettings = {
+              name: 'IA COMPANY TEC',
+              document: '',
+              phone: '',
+              email: '',
+              address: '',
+              website: '',
+              theme: 'light',
+              menu_order: ['dashboard', 'accountability', 'consumption', 'clients', 'products', 'supplies', 'tickets', 'kanban', 'quotes', 'receipts', 'financial', 'calendar', 'settings'],
+              tile_sizes: {},
+              tile_order: null,
+              hidden_tiles: []
+            };
+            const { data: newSettings, error: createError } = await supabase
+              .from('company_settings')
+              .insert([defaultSettings])
+              .select()
+              .single();
+            
+            if (!createError && newSettings) {
+              companySettingsRes.data = newSettings;
+            }
+          }
 
           // Check for errors
           results.forEach((res, index) => {
@@ -2413,5 +2441,18 @@ export const useStore = create<AppState>()(
           toast.error('Erro ao sincronizar dados com o servidor.', { id: loadingToast });
         }
       },
-    })
+    }),
+    {
+      name: 'iac-tec-storage',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        theme: state.theme,
+        menuOrder: state.menuOrder,
+        tileSizes: state.tileSizes,
+        tileOrder: state.tileOrder,
+        hiddenTiles: state.hiddenTiles,
+        isAuthenticated: state.isAuthenticated
+      }),
+    }
+  )
 );
