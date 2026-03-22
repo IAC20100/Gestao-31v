@@ -170,6 +170,58 @@ export default function SuppliesManager() {
       }
     }, 100);
   };
+
+  const handleSendEmail = () => {
+    if (quotationItems.length === 0) return;
+    
+    const itemCategories = new Set(
+      quotationItems.map(qi => supplyItems.find(si => si.id === qi.supplyItemId)?.category)
+    );
+    
+    const relevantSuppliers = suppliers.filter(s => s.category === 'GERAL' || itemCategories.has(s.category as any));
+    const emails = relevantSuppliers.map(s => s.email).filter(Boolean).join(',');
+    
+    if (!emails) {
+      toast.error('Nenhum fornecedor com e-mail encontrado.');
+      return;
+    }
+
+    const subject = encodeURIComponent(`Cotação de Insumos - ${selectedClient?.name || 'Geral'}`);
+    const body = encodeURIComponent(`Olá,\n\nSolicitamos cotação para os seguintes itens:\n\n${
+      quotationItems.map(qi => {
+        const item = supplyItems.find(si => si.id === qi.supplyItemId);
+        return `- ${item?.name}: ${qi.quantity} ${item?.unit}`;
+      }).join('\n')
+    }\n\nAtenciosamente,\n${companyData?.name || 'Gestão de Insumos'}`);
+
+    window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
+  };
+
+  const handleSendQuotationEmail = (quotation: SupplyQuotation) => {
+    const emails = quotation.responses
+      .map(r => suppliers.find(s => s.id === r.supplierId)?.email)
+      .filter(Boolean)
+      .join(',');
+
+    if (!emails) {
+      toast.error('Nenhum e-mail encontrado.');
+      return;
+    }
+
+    const firstItem = supplyItems.find(si => si.id === quotation.items[0]?.supplyItemId);
+    const client = clients.find(c => c.id === firstItem?.clientId);
+
+    const subject = encodeURIComponent(`Cotação de Insumos #${quotation.id.slice(0, 8)} - ${client?.name || 'Geral'}`);
+    const body = encodeURIComponent(`Olá,\n\nSolicitamos cotação para os seguintes itens:\n\n${
+      quotation.items.map(qi => {
+        const item = supplyItems.find(si => si.id === qi.supplyItemId);
+        return `- ${item?.name}: ${qi.quantity} ${item?.unit}`;
+      }).join('\n')
+    }\n\nAtenciosamente,\n${companyData?.name || 'Gestão de Insumos'}`);
+
+    window.location.href = `mailto:${emails}?subject=${subject}&body=${body}`;
+  };
+
   const selectedClient = clients.find(c => c.id === selectedClientId);
   const filteredSupplyItems = supplyItems.filter(item => item.clientId === selectedClientId);
   const lowStockItems = filteredSupplyItems.filter(item => item.currentStock <= item.minStock);
@@ -499,6 +551,13 @@ export default function SuppliesManager() {
                         >
                           <Share2 className="w-4 h-4" />
                         </button>
+                        <button 
+                          onClick={() => handleSendQuotationEmail(quotation)}
+                          className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white/60 hover:text-white transition-all border border-white/5"
+                          title="Enviar E-mail"
+                        >
+                          <Mail className="w-4 h-4" />
+                        </button>
                       </div>
                       <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
                         quotation.status === 'OPEN' ? 'bg-amber-500/20 text-amber-400 border-amber-500/20 animate-pulse' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
@@ -766,18 +825,24 @@ export default function SuppliesManager() {
                     <div className="pt-6 mt-6 border-t border-white/10 space-y-3">
                       <p className="text-xs text-white/40 mb-4">A cotação será enviada automaticamente para todos os fornecedores das categorias selecionadas.</p>
                       
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-3 gap-3">
                         <button 
                           onClick={handleDownloadPdf}
-                          className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                          className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs"
                         >
                           <Download className="w-4 h-4" /> PDF
                         </button>
                         <button 
                           onClick={handleShareList}
-                          className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                          className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs"
                         >
                           <Share2 className="w-4 h-4" /> Enviar
+                        </button>
+                        <button 
+                          onClick={handleSendEmail}
+                          className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center justify-center gap-2 active:scale-95 text-xs"
+                        >
+                          <Mail className="w-4 h-4" /> E-mail
                         </button>
                       </div>
 
