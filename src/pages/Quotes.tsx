@@ -2,12 +2,12 @@ import React, { useState, useRef, useMemo } from 'react';
 import { useStore } from '../store';
 import { QuoteItem, Quote } from '../types';
 import { useNavigate } from 'react-router-dom';
-import { Upload, Plus, Trash2, Save, FileSpreadsheet, CheckCircle, Clock, XCircle, FileText, Download, Eye, Send, Printer, Wrench } from 'lucide-react';
+import { Upload, Plus, Trash2, Save, FileSpreadsheet, CheckCircle, Clock, XCircle, FileText, Download, Eye, Send, Printer, Wrench, Share2 } from 'lucide-react';
 import { BackButton } from '../components/BackButton';
 import { motion, AnimatePresence } from 'framer-motion';
 import Papa from 'papaparse';
 import { v4 as uuidv4 } from 'uuid';
-import { generatePdf } from '../utils/pdfGenerator';
+import { generatePdf, sharePdf } from '../utils/pdfGenerator';
 import { StatCard } from '../components/StatCard';
 import { Modal } from '../components/Modal';
 import toast from 'react-hot-toast';
@@ -214,6 +214,43 @@ export default function Quotes() {
     }, 1500); // Increased timeout for safety
   };
 
+  const handleSharePdf = async (quote: Quote) => {
+    window.scrollTo(0, 0);
+    setQuoteToPrint(quote);
+    setIsGenerating(true);
+    
+    setTimeout(async () => {
+      const element = printRef.current;
+      if (!element) {
+        setIsGenerating(false);
+        setQuoteToPrint(null);
+        toast.error('Erro: Template do PDF não encontrado.');
+        return;
+      }
+
+      try {
+        const client = clients.find(c => c.id === quote.clientId);
+        const safeName = client?.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_') || 'Cliente';
+        const dateStr = new Date(quote.date).toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const fileName = `Orcamento_${safeName}_${dateStr}.pdf`;
+
+        await sharePdf(element, fileName);
+        toast.success('Compartilhamento iniciado!');
+      } catch (error: any) {
+        console.error('Erro ao compartilhar PDF:', error);
+        const errorMsg = error?.message || 'Erro desconhecido';
+        if (errorMsg.includes('Compartilhamento não suportado')) {
+          toast.error(errorMsg);
+        } else {
+          toast.error(`Erro ao compartilhar: ${errorMsg}`);
+        }
+      } finally {
+        setIsGenerating(false);
+        setQuoteToPrint(null);
+      }
+    }, 1500);
+  };
+
   const handlePrintQuote = (quote: Quote) => {
     setQuoteToPrint(quote);
     setTimeout(() => {
@@ -388,6 +425,14 @@ export default function Quotes() {
                             title="Baixar PDF"
                           >
                             <Download className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => handleSharePdf(quote)}
+                            disabled={isGenerating}
+                            className="p-2 text-white/40 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-colors"
+                            title="Compartilhar"
+                          >
+                            <Share2 className="w-4 h-4" />
                           </button>
                           <button 
                             onClick={() => {
@@ -716,7 +761,8 @@ export default function Quotes() {
         <div style={{ position: 'absolute', top: '-9999px', left: '-9999px' }}>
           <div 
             ref={printRef}
-            className="bg-white w-[800px] text-zinc-900 font-sans"
+            ref-name="printRef"
+            className="bg-white w-[800px] text-zinc-900 font-sans pdf-content"
             style={{ padding: '40px', margin: '0' }}
           >
             {/* Header */}

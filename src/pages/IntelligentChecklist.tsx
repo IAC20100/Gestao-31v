@@ -4,13 +4,13 @@ import { NBR5674_STANDARDS } from '../constants/maintenance';
 import { 
   Calendar, CheckCircle2, AlertTriangle, Clock, Plus, RefreshCw, 
   Building2, Bell, Check, Download, FileText, Home, DollarSign, 
-  MessageSquare, Settings, Users, Wrench, Activity, AlertCircle, Zap, Droplets, Menu
+  MessageSquare, Settings, Users, Wrench, Activity, AlertCircle, Zap, Droplets, Menu, Share2
 } from 'lucide-react';
 import { BackButton } from '../components/BackButton';
 import { format, isAfter, parseISO, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
-import { generatePdf } from '../utils/pdfGenerator';
+import { generatePdf, sharePdf } from '../utils/pdfGenerator';
 import { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
@@ -259,6 +259,26 @@ export default function IntelligentChecklist() {
     }
   };
 
+  const handleSharePDF = async () => {
+    if (!printRef.current || !selectedClient) return;
+    
+    window.scrollTo(0, 0);
+
+    try {
+      toast.loading('Preparando compartilhamento...', { id: 'share-pdf' });
+      await sharePdf(printRef.current, `Manutencao_${selectedClient.name}_${format(new Date(), 'dd_MM_yyyy')}.pdf`);
+      toast.success('Compartilhamento iniciado!', { id: 'share-pdf' });
+    } catch (error: any) {
+      console.error('Erro ao compartilhar PDF:', error);
+      const errorMsg = error?.message || 'Erro desconhecido';
+      if (errorMsg.includes('Compartilhamento não suportado')) {
+        toast.error(errorMsg, { id: 'share-pdf' });
+      } else {
+        toast.error(`Erro ao compartilhar: ${errorMsg}`, { id: 'share-pdf' });
+      }
+    }
+  };
+
   if (!selectedClientId) {
     return (
       <div 
@@ -386,6 +406,12 @@ export default function IntelligentChecklist() {
             className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-blue-500/30"
           >
             <Download className="w-3 h-3" /> Exportar PDF
+          </button>
+          <button
+            onClick={handleSharePDF}
+            className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border border-emerald-500/30"
+          >
+            <Share2 className="w-3 h-3" /> Compartilhar
           </button>
         </div>
 
@@ -672,7 +698,11 @@ export default function IntelligentChecklist() {
 
       {/* PDF Template (Hidden) */}
       <div className="hidden">
-        <div ref={printRef} className="p-12 bg-white text-zinc-900 font-sans w-[210mm] min-h-[297mm]">
+        <div 
+          ref={printRef} 
+          ref-name="printRef"
+          className="p-12 bg-white text-zinc-900 font-sans w-[210mm] min-h-[297mm] pdf-content"
+        >
           {/* Header */}
           <div className="flex justify-between items-start mb-4">
             <div>

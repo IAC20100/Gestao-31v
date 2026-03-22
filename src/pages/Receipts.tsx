@@ -1,9 +1,9 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '../store';
 import { Receipt } from '../types';
-import { Download, Printer, FileText, FileCheck, Calendar, DollarSign, User, Trash2, Search } from 'lucide-react';
+import { Download, Printer, FileText, FileCheck, Calendar, DollarSign, User, Trash2, Search, Share2 } from 'lucide-react';
 import { BackButton } from '../components/BackButton';
-import { generatePdf } from '../utils/pdfGenerator';
+import { generatePdf, sharePdf } from '../utils/pdfGenerator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -73,6 +73,49 @@ export default function Receipts() {
     }
   };
 
+  const handleSaveAndShare = async () => {
+    if (!clientId || value <= 0 || !description) {
+      toast.error('Preencha todos os campos obrigatórios (Cliente, Valor e Descrição).');
+      return;
+    }
+
+    if (!receiptRef.current) return;
+
+    window.scrollTo(0, 0);
+    setIsGenerating(true);
+
+    try {
+      // Save to store
+      addReceipt({
+        clientId,
+        value,
+        description,
+        date
+      });
+
+      // Share PDF
+      const fileName = `Recibo_${selectedClient?.name.replace(/\s+/g, '_')}_${date}.pdf`;
+      await sharePdf(receiptRef.current, fileName);
+      
+      // Reset form
+      setClientId('');
+      setValue(0);
+      setDescription('');
+      toast.success('Recibo compartilhado e salvo com sucesso!');
+      
+    } catch (error: any) {
+      console.error('Erro ao compartilhar recibo:', error);
+      const errorMsg = error?.message || 'Erro desconhecido';
+      if (errorMsg.includes('Compartilhamento não suportado')) {
+        toast.error(errorMsg);
+      } else {
+        toast.error(`Erro ao compartilhar: ${errorMsg}`);
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   const handleDownloadExisting = async (receipt: Receipt) => {
     setDownloadingReceipt(receipt);
     
@@ -92,6 +135,33 @@ export default function Receipts() {
         } catch (error) {
           console.error('Erro ao baixar recibo:', error);
           toast.error('Erro ao gerar PDF do recibo antigo.');
+        }
+      }
+      setDownloadingReceipt(null);
+      setIsGenerating(false);
+    }, 800);
+  };
+
+  const handleShareReceipt = async (receipt: Receipt) => {
+    setDownloadingReceipt(receipt);
+    window.scrollTo(0, 0);
+    setIsGenerating(true);
+    
+    setTimeout(async () => {
+      if (downloadRef.current) {
+        try {
+          const client = clients.find(c => c.id === receipt.clientId);
+          const fileName = `Recibo_${client?.name.replace(/\s+/g, '_')}_${receipt.date}.pdf`;
+          await sharePdf(downloadRef.current, fileName);
+          toast.success('Compartilhamento iniciado!');
+        } catch (error: any) {
+          console.error('Erro ao compartilhar recibo:', error);
+          const errorMsg = error?.message || 'Erro desconhecido';
+          if (errorMsg.includes('Compartilhamento não suportado')) {
+            toast.error(errorMsg);
+          } else {
+            toast.error(`Erro ao compartilhar: ${errorMsg}`);
+          }
         }
       }
       setDownloadingReceipt(null);
@@ -165,6 +235,17 @@ export default function Receipts() {
           >
             <Download className="w-6 h-6 group-hover:translate-y-1 transition-transform" /> 
             <span className="text-lg font-medium">{isGenerating ? 'Gerando...' : 'Salvar e Baixar'}</span>
+          </motion.button>
+
+          <motion.button 
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            onClick={handleSaveAndShare}
+            disabled={isGenerating || !clientId || value <= 0 || !description}
+            className="bg-emerald-500 hover:bg-emerald-600 text-white px-8 py-4 flex items-center gap-3 border border-emerald-400/20 backdrop-blur-md transition-all disabled:opacity-30 disabled:cursor-not-allowed group shadow-lg shadow-emerald-500/20"
+          >
+            <Share2 className="w-6 h-6 group-hover:scale-110 transition-transform" /> 
+            <span className="text-lg font-medium">{isGenerating ? 'Gerando...' : 'Salvar e Compartilhar'}</span>
           </motion.button>
         </div>
       </header>
@@ -255,7 +336,8 @@ export default function Receipts() {
             {/* Actual Receipt to be printed/saved */}
             <div 
               ref={receiptRef}
-              className="bg-white w-full max-w-[800px] mx-auto shadow-2xl p-12 text-gray-900 print:shadow-none rounded-sm"
+              ref-name="receiptRef"
+              className="bg-white w-full max-w-[800px] mx-auto shadow-2xl p-12 text-gray-900 print:shadow-none rounded-sm pdf-content"
               style={{ minHeight: '1056px' }} // A4 approximate ratio
             >
               {/* Header */}
@@ -418,6 +500,13 @@ export default function Receipts() {
                                 title="Baixar PDF"
                               >
                                 <Download className="w-5 h-5" />
+                              </button>
+                              <button 
+                                onClick={() => handleShareReceipt(receipt)}
+                                className="p-2 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-lg transition-all"
+                                title="Compartilhar"
+                              >
+                                <Share2 className="w-5 h-5" />
                               </button>
                               <button 
                                 onClick={() => handleDeleteReceipt(receipt.id)}

@@ -1,10 +1,10 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../store';
-import { Download, Printer, Edit, CheckCircle2, XCircle, DollarSign, Camera, MapPin, User, MessageSquare, Plus, QrCode } from 'lucide-react';
+import { Download, Printer, Edit, CheckCircle2, XCircle, DollarSign, Camera, MapPin, User, MessageSquare, Plus, QrCode, Share2 } from 'lucide-react';
 import { BackButton } from '../components/BackButton';
 import { useRef, useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { generatePdf } from '../utils/pdfGenerator';
+import { generatePdf, sharePdf } from '../utils/pdfGenerator';
 import { toast } from 'react-hot-toast';
 
 export default function TicketView() {
@@ -80,6 +80,37 @@ export default function TicketView() {
     window.print();
   };
 
+  const handleSharePdf = async () => {
+    const element = printRef.current;
+    if (!element) return;
+
+    window.scrollTo(0, 0);
+    setIsGenerating(true);
+    try {
+      let fileName = '';
+      if (ticket.id === '123') {
+        fileName = 'OS_CORRETIVA_Condominio_Flores_20-02-2026.pdf';
+      } else {
+        const dateStr = new Date(ticket.date).toLocaleDateString('pt-BR').replace(/\//g, '-');
+        const safeName = client?.name ? client.name.replace(/[^a-zA-Z0-9\s]/g, '').trim().replace(/\s+/g, '_') : 'Tarefa';
+        fileName = `OS_${ticket.type}_${safeName}_${dateStr}.pdf`;
+      }
+
+      await sharePdf(element, fileName);
+      toast.success('Compartilhamento iniciado!');
+    } catch (error: any) {
+      console.error('Erro ao compartilhar PDF:', error);
+      const errorMsg = error?.message || 'Erro desconhecido';
+      if (errorMsg.includes('Compartilhamento não suportado')) {
+        toast.error(errorMsg);
+      } else {
+        toast.error(`Erro ao compartilhar: ${errorMsg}`);
+      }
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#004a7c] text-white -m-8 p-8 md:p-12 overflow-x-hidden relative flex flex-col print:bg-white print:text-black print:p-0 print:m-0 print:block">
       <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden print:hidden">
@@ -129,6 +160,13 @@ export default function TicketView() {
             >
               <Download className="w-4 h-4" /> {isGenerating ? 'Gerando...' : 'Baixar PDF'}
             </button>
+            <button 
+              onClick={handleSharePdf}
+              disabled={isGenerating}
+              className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 shadow-lg"
+            >
+              <Share2 className="w-4 h-4" /> Compartilhar
+            </button>
           </div>
         </div>
 
@@ -176,7 +214,8 @@ export default function TicketView() {
         <div className="bg-white rounded-3xl shadow-2xl overflow-hidden print:shadow-none print:rounded-none">
           <div 
             ref={printRef} 
-            className="bg-white text-zinc-900 p-6 md:p-12 print:p-0 print:w-full print:max-w-[210mm] print:mx-auto"
+            ref-name="printRef"
+            className="bg-white text-zinc-900 p-6 md:p-12 print:p-0 print:w-full print:max-w-[210mm] print:mx-auto pdf-content"
           >
         {/* Cabeçalho do Relatório */}
         <div className="border-b border-zinc-200 pb-6 mb-8 flex justify-between items-start break-inside-avoid page-break-inside-avoid">

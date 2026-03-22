@@ -11,13 +11,14 @@ import {
   ExternalLink,
   Printer,
   Smartphone,
-  MessageSquare
+  MessageSquare,
+  Share2
 } from 'lucide-react';
 import { BackButton } from '../components/BackButton';
 import { Modal } from '../components/Modal';
 import { v4 as uuidv4 } from 'uuid';
 import { useNavigate } from 'react-router-dom';
-import { generatePdf } from '../utils/pdfGenerator';
+import { generatePdf, sharePdf } from '../utils/pdfGenerator';
 import { toast } from 'react-hot-toast';
 
 export default function QRManager() {
@@ -135,6 +136,28 @@ export default function QRManager() {
     } catch (error) {
       console.error(error);
       toast.error('Erro ao gerar PDF em lote.', { id: 'printing-all' });
+    }
+  };
+
+  const handleShareAll = async () => {
+    if (!selectedClient || !selectedClient.locations || selectedClient.locations.length === 0) return;
+
+    window.scrollTo(0, 0);
+
+    try {
+      toast.loading('Preparando compartilhamento...', { id: 'sharing-all' });
+      await new Promise(resolve => setTimeout(resolve, 500));
+      if (!bulkPrintRef.current) throw new Error('Template de impressão não encontrado');
+      await sharePdf(bulkPrintRef.current, `QR-CODES-LOTE-${selectedClient.name}.pdf`);
+      toast.success('Compartilhamento iniciado!', { id: 'sharing-all' });
+    } catch (error: any) {
+      console.error(error);
+      const errorMsg = error?.message || 'Erro desconhecido';
+      if (errorMsg.includes('Compartilhamento não suportado')) {
+        toast.error(errorMsg, { id: 'sharing-all' });
+      } else {
+        toast.error('Erro ao compartilhar PDF em lote.', { id: 'sharing-all' });
+      }
     }
   };
 
@@ -294,6 +317,14 @@ export default function QRManager() {
                 >
                   <Printer className="w-5 h-5 text-cyan-400" />
                   Imprimir Lote
+                </button>
+
+                <button
+                  onClick={handleShareAll}
+                  className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all flex items-center gap-3 border border-emerald-500/20 backdrop-blur-xl active:scale-95"
+                >
+                  <Share2 className="w-5 h-5 text-emerald-400" />
+                  Compartilhar Lote
                 </button>
 
                 <button
@@ -480,7 +511,12 @@ export default function QRManager() {
 
       {/* Modern QR Code Print Template (Off-screen for rendering) - Acrylic Style */}
       <div className="fixed -left-[9999px] top-0 pointer-events-none">
-        <div ref={printRef} style={{ backgroundColor: '#ffffff', color: '#18181b' }} className="w-[148mm] h-[210mm] relative flex flex-col items-center p-10 font-sans overflow-hidden">
+        <div 
+          ref={printRef} 
+          ref-name="printRef"
+          style={{ backgroundColor: '#ffffff', color: '#18181b' }} 
+          className="w-[148mm] h-[210mm] relative flex flex-col items-center p-10 font-sans overflow-hidden pdf-content"
+        >
           {/* Header Text */}
               <div className="w-full text-center mb-6 relative z-10">
                 <div className="flex items-center justify-center gap-3 mb-3">
@@ -569,7 +605,12 @@ export default function QRManager() {
 
       {/* Bulk Print Template - Modern Style (Off-screen) */}
       <div className="fixed -left-[9999px] top-0 pointer-events-none">
-        <div ref={bulkPrintRef} style={{ backgroundColor: '#ffffff', color: '#18181b' }} className="w-[210mm] font-sans">
+        <div 
+          ref={bulkPrintRef} 
+          ref-name="bulkPrintRef"
+          style={{ backgroundColor: '#ffffff', color: '#18181b' }} 
+          className="w-[210mm] font-sans pdf-content"
+        >
           {selectedClient?.locations && Array.from({ length: Math.ceil(selectedClient.locations.length / 4) }).map((_, pageIndex) => (
             <div key={pageIndex} className="w-[210mm] h-[297mm] grid grid-cols-2 grid-rows-2 p-[10mm] gap-[10mm] page-break-after-always">
               {selectedClient.locations?.slice(pageIndex * 4, (pageIndex * 4) + 4).map((loc) => (

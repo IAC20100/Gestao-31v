@@ -204,9 +204,39 @@
   animation: scan 2s linear infinite;
 }
 
-/* Force HEX colors for PDF generation to avoid oklch errors */
-[ref="printRef"], .bg-white, .text-zinc-900, .text-red-600, .text-zinc-400, .text-zinc-500, .border-zinc-900 {
-  color-scheme: light;
+/* Force HEX colors for PDF generation to avoid oklch/oklab errors */
+.pdf-content, [ref-name="printRef"], [ref-name="receiptRef"], [ref-name="downloadRef"], [ref-name="bulkPrintRef"] {
+  color-scheme: light !important;
+  
+  /* Reset Tailwind v4 variables that might use oklch/oklab */
+  --tw-ring-color: rgba(0, 0, 0, 0) !important;
+  --tw-ring-offset-color: #ffffff !important;
+  --tw-shadow-color: rgba(0, 0, 0, 0) !important;
+  --tw-border-opacity: 1 !important;
+  --tw-text-opacity: 1 !important;
+  --tw-bg-opacity: 1 !important;
+  --tw-outline-color: #000000 !important;
+  --tw-ring-offset-shadow: 0 0 #0000 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+  --tw-shadow: 0 0 #0000 !important;
+  --tw-shadow-colored: 0 0 #0000 !important;
+  
+  /* Force standard colors for common elements */
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  
+  /* Ensure all children use standard colors */
+  * {
+    border-color: #000000 !important;
+    color: inherit !important;
+  }
+}
+
+/* Global reset for Tailwind v4 variables that might cause oklch/oklab errors in html2canvas */
+:root {
+  --tw-ring-color: rgba(0, 0, 0, 0);
+  --tw-ring-offset-color: #ffffff;
+  --tw-shadow-color: rgba(0, 0, 0, 0);
 }
 
 @media print {
