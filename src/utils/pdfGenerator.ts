@@ -50,10 +50,42 @@ export async function generatePdf(element: HTMLElement, fileName: string, format
     };
 
     // Usando html2pdf para gerar o PDF respeitando quebras de página
-    // Adicionando .toPdf().get('pdf') para maior controle antes do save
-    await html2pdf().set(opt).from(element).save();
+    // Geramos como Blob para ter mais controle sobre o download e evitar extensão .bin
+    const worker = html2pdf().set(opt).from(element);
+    const pdfBlob = await worker.output('blob');
     
-    console.log('PDF gerado com sucesso via html2pdf.js');
+    // Garantir que o Blob tenha o tipo MIME correto
+    const blob = new Blob([pdfBlob], { type: 'application/pdf' });
+    
+    // Criar URL para o Blob
+    const url = URL.createObjectURL(blob);
+    
+    // Criar elemento de link temporário para forçar o download com o nome correto
+    const link = document.createElement('a');
+    link.href = url;
+    
+    // Garantir que o nome do arquivo seja seguro e termine com .pdf
+    const sanitizedFileName = fileName
+      .replace(/[/\\?%*:|"<>]/g, '-') // Remover caracteres inválidos para nomes de arquivo
+      .trim();
+    
+    const finalFileName = sanitizedFileName.toLowerCase().endsWith('.pdf') 
+      ? sanitizedFileName 
+      : `${sanitizedFileName}.pdf`;
+    
+    link.download = finalFileName;
+    
+    // Adicionar ao corpo, clicar e remover
+    document.body.appendChild(link);
+    link.click();
+    
+    // Pequeno delay antes de limpar para garantir que o download iniciou
+    setTimeout(() => {
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }, 200);
+    
+    console.log(`PDF gerado e download iniciado manualmente: ${finalFileName}`);
     return true;
   } catch (error) {
     console.error('Erro crítico na geração do PDF:', error);
