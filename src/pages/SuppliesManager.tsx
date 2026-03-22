@@ -18,9 +18,15 @@ import {
   Mail,
   Phone,
   Edit2,
-  Trash2
+  Trash2,
+  Download,
+  Share2,
+  Printer
 } from 'lucide-react';
 import { Modal } from '../components/Modal';
+import { ShoppingListTemplate } from '../components/ShoppingListTemplate';
+import { generatePdf, sharePdf } from '../utils/pdfGenerator';
+import { toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { BackButton } from '../components/BackButton';
@@ -40,7 +46,8 @@ export default function SuppliesManager() {
     updateSupplier,
     deleteSupplier,
     createQuotation,
-    clients
+    clients,
+    companyData
   } = useStore();
 
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
@@ -51,6 +58,7 @@ export default function SuppliesManager() {
   
   const [editingItem, setEditingItem] = useState<SupplyItem | null>(null);
   const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [activeQuotationForPdf, setActiveQuotationForPdf] = useState<SupplyQuotation | null>(null);
 
   // Form states
   const [itemForm, setItemForm] = useState({ name: '', category: 'LIMPEZA' as 'LIMPEZA' | 'PISCINA', minStock: 0, unit: '' });
@@ -84,8 +92,84 @@ export default function SuppliesManager() {
     createQuotation(quotationItems);
     setIsQuotationModalOpen(false);
     setQuotationItems([]);
+    toast.success('Cotação disparada com sucesso!');
   };
 
+  const handleDownloadPdf = async () => {
+    const element = document.getElementById('shopping-list-pdf');
+    if (!element) return;
+    
+    try {
+      toast.loading('Gerando PDF...', { id: 'pdf' });
+      await generatePdf(element, `Lista_Compras_${selectedClient?.name || 'Geral'}_${format(new Date(), 'ddMMyyyy')}`);
+      toast.success('PDF gerado com sucesso!', { id: 'pdf' });
+    } catch (error) {
+      toast.error('Erro ao gerar PDF', { id: 'pdf' });
+    }
+  };
+
+  const handleShareList = async () => {
+    const element = document.getElementById('shopping-list-pdf');
+    if (!element) return;
+
+    try {
+      toast.loading('Preparando compartilhamento...', { id: 'share' });
+      await sharePdf(element, `Lista_Compras_${selectedClient?.name || 'Geral'}_${format(new Date(), 'ddMMyyyy')}`);
+      toast.success('Pronto para compartilhar!', { id: 'share' });
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('não suportado')) {
+        toast.success('PDF baixado com sucesso!', { id: 'share' });
+      } else {
+        toast.error('Erro ao compartilhar', { id: 'share' });
+      }
+    }
+  };
+
+  const handleDownloadQuotationPdf = async (quotation: SupplyQuotation) => {
+    setActiveQuotationForPdf(quotation);
+    // Wait for state update and re-render
+    setTimeout(async () => {
+      const element = document.getElementById(`quotation-pdf-${quotation.id}`);
+      if (!element) return;
+      
+      try {
+        toast.loading('Gerando PDF...', { id: 'pdf' });
+        const firstItem = supplyItems.find(si => si.id === quotation.items[0]?.supplyItemId);
+        const client = clients.find(c => c.id === firstItem?.clientId);
+        await generatePdf(element, `Lista_Compras_${client?.name || 'Geral'}_${format(new Date(quotation.date), 'ddMMyyyy')}`);
+        toast.success('PDF gerado com sucesso!', { id: 'pdf' });
+      } catch (error) {
+        toast.error('Erro ao gerar PDF', { id: 'pdf' });
+      } finally {
+        setActiveQuotationForPdf(null);
+      }
+    }, 100);
+  };
+
+  const handleShareQuotationList = async (quotation: SupplyQuotation) => {
+    setActiveQuotationForPdf(quotation);
+    // Wait for state update and re-render
+    setTimeout(async () => {
+      const element = document.getElementById(`quotation-pdf-${quotation.id}`);
+      if (!element) return;
+
+      try {
+        toast.loading('Preparando compartilhamento...', { id: 'share' });
+        const firstItem = supplyItems.find(si => si.id === quotation.items[0]?.supplyItemId);
+        const client = clients.find(c => c.id === firstItem?.clientId);
+        await sharePdf(element, `Lista_Compras_${client?.name || 'Geral'}_${format(new Date(quotation.date), 'ddMMyyyy')}`);
+        toast.success('Pronto para compartilhar!', { id: 'share' });
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('não suportado')) {
+          toast.success('PDF baixado com sucesso!', { id: 'share' });
+        } else {
+          toast.error('Erro ao compartilhar', { id: 'share' });
+        }
+      } finally {
+        setActiveQuotationForPdf(null);
+      }
+    }, 100);
+  };
   const selectedClient = clients.find(c => c.id === selectedClientId);
   const filteredSupplyItems = supplyItems.filter(item => item.clientId === selectedClientId);
   const lowStockItems = filteredSupplyItems.filter(item => item.currentStock <= item.minStock);
@@ -399,11 +483,29 @@ export default function SuppliesManager() {
                         <p className="text-sm text-white/40">{format(new Date(quotation.date), 'dd/MM/yyyy HH:mm')}</p>
                       </div>
                     </div>
-                    <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
-                      quotation.status === 'OPEN' ? 'bg-amber-500/20 text-amber-400 border-amber-500/20 animate-pulse' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
-                    }`}>
-                      {quotation.status === 'OPEN' ? 'Em Aberto' : 'Finalizada'}
-                    </span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-2 mr-4">
+                        <button 
+                          onClick={() => handleDownloadQuotationPdf(quotation)}
+                          className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white/60 hover:text-white transition-all border border-white/5"
+                          title="Baixar PDF"
+                        >
+                          <Download className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleShareQuotationList(quotation)}
+                          className="p-2 bg-white/5 hover:bg-white/10 rounded-xl text-white/60 hover:text-white transition-all border border-white/5"
+                          title="Compartilhar"
+                        >
+                          <Share2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                        quotation.status === 'OPEN' ? 'bg-amber-500/20 text-amber-400 border-amber-500/20 animate-pulse' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/20'
+                      }`}>
+                        {quotation.status === 'OPEN' ? 'Em Aberto' : 'Finalizada'}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -661,13 +763,29 @@ export default function SuppliesManager() {
                         );
                       })}
                     </div>
-                    <div className="pt-6 mt-6 border-t border-white/10">
-                      <p className="text-xs text-white/40 mb-6">A cotação será enviada automaticamente para todos os fornecedores das categorias selecionadas.</p>
+                    <div className="pt-6 mt-6 border-t border-white/10 space-y-3">
+                      <p className="text-xs text-white/40 mb-4">A cotação será enviada automaticamente para todos os fornecedores das categorias selecionadas.</p>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <button 
+                          onClick={handleDownloadPdf}
+                          className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <Download className="w-4 h-4" /> PDF
+                        </button>
+                        <button 
+                          onClick={handleShareList}
+                          className="bg-white/10 hover:bg-white/20 text-white py-3 rounded-xl font-bold border border-white/20 transition-all flex items-center justify-center gap-2 active:scale-95"
+                        >
+                          <Share2 className="w-4 h-4" /> Enviar
+                        </button>
+                      </div>
+
                       <button 
                         onClick={handleCreateQuotation}
-                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                        className="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-bold shadow-lg shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-3"
                       >
-                        DISPARAR COTAÇÃO AUTOMÁTICA
+                        <Printer className="w-5 h-5" /> DISPARAR COTAÇÃO AUTOMÁTICA
                       </button>
                     </div>
                   </>
@@ -677,6 +795,30 @@ export default function SuppliesManager() {
           </div>
         </div>
       </Modal>
+
+      {/* Hidden PDF Template for active creation */}
+      <div className="fixed left-[-9999px] top-0 pointer-events-none">
+        <ShoppingListTemplate 
+          items={quotationItems}
+          supplyItems={supplyItems}
+          client={selectedClient}
+          companyData={companyData}
+        />
+      </div>
+
+      {/* Hidden PDF Templates for history items */}
+      {activeQuotationForPdf && (
+        <div className="fixed left-[-9999px] top-0 pointer-events-none">
+          <div id={`quotation-pdf-${activeQuotationForPdf.id}`}>
+            <ShoppingListTemplate 
+              items={activeQuotationForPdf.items}
+              supplyItems={supplyItems}
+              client={clients.find(c => c.id === supplyItems.find(si => si.id === activeQuotationForPdf.items[0]?.supplyItemId)?.clientId)}
+              companyData={companyData}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
