@@ -277,11 +277,11 @@ export default function Dashboard() {
   const totalReceitas = receipts.reduce((acc, curr) => acc + curr.value, 0);
   const totalDespesas = costs.reduce((acc, curr) => acc + curr.value, 0);
   const saldo = totalReceitas - totalDespesas;
-  const nextAppointment = useMemo(() => {
-    const future = appointments
+  const nextAppointments = useMemo(() => {
+    return appointments
       .filter(a => a.start && new Date(a.start) > new Date())
-      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
-    return future[0] || appointments[0];
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime())
+      .slice(0, 3);
   }, [appointments]);
 
   const sensors = useSensors(
@@ -425,38 +425,38 @@ export default function Dashboard() {
     },
     {
       id: 'calendar',
-      type: 'wide',
+      type: 'square',
       component: (
-        <Link to="/calendar" className="w-full h-full bg-slate-900/40 backdrop-blur-2xl hover:brightness-110 transition-all p-4 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 text-white">
+        <Link to="/calendar" className="w-full h-full bg-slate-900/40 backdrop-blur-2xl hover:brightness-110 transition-all p-3 flex flex-col justify-between group relative overflow-hidden border border-white/10 shadow-2xl active:scale-95 text-white">
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/20 pointer-events-none" />
-          <div className="flex items-start gap-2 md:gap-4 h-full relative z-10">
-            <div className="p-1.5 md:p-3 bg-white/10 rounded-xl md:rounded-2xl border border-white/20 shadow-sm group-hover:scale-110 transition-transform duration-500 shrink-0">
-              <CalendarIcon className="w-6 h-6 md:w-10 md:h-10 text-white" />
+          <div className="relative z-10 flex flex-col h-full">
+            <div className="flex items-center gap-2 mb-2">
+              <CalendarIcon className="w-5 h-5 text-white/70" />
+              <p className="text-[10px] font-black uppercase text-white/50 tracking-[0.2em] truncate">Agenda</p>
             </div>
-            <div className="overflow-hidden flex-1">
-              <p className="text-[8px] md:text-[10px] font-black uppercase text-white/50 mb-0.5 md:mb-1 tracking-[0.2em] truncate">Agenda</p>
-              {nextAppointment ? (
-                <div className="space-y-0.5 md:space-y-1">
-                  <p className="font-black text-xs md:text-xl truncate text-white leading-tight">{nextAppointment.title}</p>
-                  <div className="flex items-center gap-1.5 md:gap-2 text-white/60">
-                    <Clock className="w-2.5 h-2.5 md:w-3 md:h-3 shrink-0" />
-                    <p className="text-[10px] md:text-sm font-medium truncate">
-                      {nextAppointment.start ? (
-                        <>
-                          {new Date(nextAppointment.start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} às {new Date(nextAppointment.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                        </>
-                      ) : (
-                        'Horário não definido'
-                      )}
-                    </p>
+            
+            <div className="flex-1 space-y-2 overflow-hidden">
+              {nextAppointments.length > 0 ? (
+                nextAppointments.map((apt) => (
+                  <div key={apt.id} className="border-l-2 border-white/20 pl-2 py-1 hover:bg-white/5 transition-colors rounded-r-lg">
+                    <p className="text-[11px] font-bold truncate leading-tight text-white/90">{apt.title}</p>
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Clock className="w-2 h-2 text-white/40" />
+                      <p className="text-[9px] text-white/50 font-medium">
+                        {apt.start ? (
+                          `${new Date(apt.start).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })} • ${new Date(apt.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`
+                        ) : (
+                          'Horário não definido'
+                        )}
+                      </p>
+                    </div>
                   </div>
-                </div>
+                ))
               ) : (
-                <p className="text-[10px] md:text-xs italic text-white/40 mt-1">Sem compromissos</p>
+                <p className="text-[10px] italic text-white/40">Sem compromissos</p>
               )}
             </div>
           </div>
-          <span className="hidden md:block text-[11px] font-black uppercase tracking-[0.2em] relative z-10 text-white/40">Calendário</span>
         </Link>
       )
     },
@@ -973,7 +973,7 @@ export default function Dashboard() {
     }));
   }, [
     clients.length, tickets.length, products.length, receipts.length, 
-    saldo, nextAppointment, notices.length, packages.length, 
+    saldo, nextAppointments, notices.length, packages.length, 
     visitors.length, criticalEvents, energyData.length, supplyItems.length, payments.length, scheduledMaintenances.length,
     savingsGoals.length, costs.length, consumptionReadings.length
   ]);
